@@ -34,7 +34,7 @@ Units FDOM=counts
 'Dim Counter
 
 'Define Data Tables
-DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+DataTable (EcoTriplet,NBytesReturned,-1) 'Set table size to # of records, or -1 to autoallocate.
    Sample (1,Chl470,Long)
    Sample (1,Beta700,Long)   
    Sample (1,FDOM,Long)
@@ -54,7 +54,7 @@ BeginProg
     '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
      SerialInRecord (PortEco,RawString,&h0A,0,&h0D,NBytesReturned,01) 
        
-     If NBytesReturned >= 42 Then
+'     If NBytesReturned >= 42 Then
        
       'Get counts for each measurement by splitingt string at tabs CHR(09)
       SplitStr (SplitStrings(1),RawString,CHR(09),9,5)
@@ -64,7 +64,7 @@ BeginProg
       
     'Update table
       CallTable EcoTriplet
-    EndIf
+    'EndIf
   NextScan
  
   
