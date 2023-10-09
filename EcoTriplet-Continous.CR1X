@@ -35,7 +35,6 @@ Units FDOM=counts
 
 'Define Data Tables
 DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoallocate.
-'   DataInterval (0,1,Sec,10)
    Sample (1,Chl470,Long)
    Sample (1,Beta700,Long)   
    Sample (1,FDOM,Long)
@@ -62,7 +61,11 @@ BeginProg
     FDOM=SplitStrings(8)        'xx41
     
     'Update table
-    CallTable EcoTriplet
+    If NBytesReturned >= 42 Then
+      CallTable EcoTriplet
+    EndIf
   NextScan
+ 
+  
 EndProg
 
