@@ -52,16 +52,17 @@ BeginProg
   Scan (1,Sec,3,0)
     'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
     '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
-     SerialInRecord (PortEco,RawString,&h0A,0,&h0D,NBytesReturned,01)   
-    
-    'Get counts for each measurement by splitingt string at tabs CHR(09)
-    SplitStr (SplitStrings(1),RawString,CHR(09),9,5)
-    Chl470=SplitStrings(4)      'xx38, where xx are additional digits
-    Beta700=SplitStrings(6)     'xx49
-    FDOM=SplitStrings(8)        'xx41
-    
+     SerialInRecord (PortEco,RawString,&h0A,0,&h0D,NBytesReturned,01) 
+       
+     If NBytesReturned >= 42 Then
+       
+      'Get counts for each measurement by splitingt string at tabs CHR(09)
+      SplitStr (SplitStrings(1),RawString,CHR(09),9,5)
+      Chl470=SplitStrings(4)      'xx38, where xx are additional digits
+      Beta700=SplitStrings(6)     'xx49
+      FDOM=SplitStrings(8)        'xx41
+      
     'Update table
-    If NBytesReturned >= 42 Then
       CallTable EcoTriplet
     EndIf
   NextScan
