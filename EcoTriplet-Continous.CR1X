@@ -22,9 +22,9 @@
 
 'Declare Public Variables
 'Example:
-Public RawString As String * 50, SplitStrings(9) As String * 10, 
-Public Chl470 As Long, Beta700 As Long, FDOM As Long
-Public NBytesReturned
+Public RawString As String * 90, SplitStrings(9) As String * 10, 
+Public Chl470 As String * 5, Beta700 As String * 5, FDOM  As String * 5
+Public NBytesReturned 
 
 'Declare Private Variables
 'Example:
@@ -35,9 +35,9 @@ DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoalloca
   'DataInterval (0,15,Sec,10)
   'Minimum (1,batt_volt,FP2,False,False)
   'Sample (1,PTemp,FP2)
-   Sample (1,Chl470,Long)
-   Sample (1,Beta700,Long)   
-   Sample (1,FDOM,Long)
+   Sample (1,Chl470,String)
+   Sample (1,Beta700,String)   
+   Sample (1,FDOM,String)
    EndTable
 
 'Define Subroutines
@@ -47,12 +47,12 @@ DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoalloca
 
 'Main Program
 BeginProg
-  SerialOpen (ComC5,19200,16,0,90,0)
+  SerialOpen (ComC5,19200,0,0,90,0)
   Scan (1,Sec,3,0)
     'Each Eco record is a tab-delimited string of 44 bytes including <cr><lf>:
     '99/99/99	99:99:99	695	38	700	49	460	41	999<cr><lf>
-    SerialInRecord (ComC5,RawString,0,42,&h0A0D,NBytesReturned,01)
-    SplitStr (SplitStrings(),RawString,&h09,9,5)
+    SerialInRecord (ComC5,RawString,0,42,&H0D0A,NBytesReturned,01)
+    SplitStr (SplitStrings(),RawString,09,9,5)
     Chl470=SplitStrings(3)
     Beta700=SplitStrings(5)
     FDOM=SplitStrings(7)
