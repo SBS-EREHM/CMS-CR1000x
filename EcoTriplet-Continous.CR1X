@@ -10,21 +10,24 @@
 'To create a different opening program template, type in new
 'instructions and select Template | Save as Default Template
 
-'Date: 2023-0815
+'Date: 2023-08-15
 'Program author: Eric Rehm, Sea-Bird Scientific
 '
 ' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
 ' 44 bytes + 44 (allow for extra record) = 88 butes --> 90 byte BufferSize
 
 'Declare Constants
-'Example:
-'CONST PI = 3.141592654
+Const PortEco = ComC5
 
 'Declare Public Variables
 'Example:
-Public RawString As String * 90, SplitStrings(9) As String * 10, 
-Public Chl470 As String * 5, Beta700 As String * 5, FDOM  As String * 5
-Public NBytesReturned 
+Public RawString As String * 100, SplitStrings(9) As String * 32
+Public Chl470 As Long, Beta700 As Long, FDOM  As Long
+Public NBytesReturned
+
+Units Chl470=counts
+Units Beta700=counts
+Units FDOM=counts
 
 'Declare Private Variables
 'Example:
@@ -32,13 +35,12 @@ Public NBytesReturned
 
 'Define Data Tables
 DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoallocate.
-  'DataInterval (0,15,Sec,10)
-  'Minimum (1,batt_volt,FP2,False,False)
-  'Sample (1,PTemp,FP2)
-   Sample (1,Chl470,String)
-   Sample (1,Beta700,String)   
-   Sample (1,FDOM,String)
-   EndTable
+'   DataInterval (0,1,Sec,10)
+   Sample (1,Chl470,Long)
+   Sample (1,Beta700,Long)   
+   Sample (1,FDOM,Long)
+   Sample (1,RawString,String) 
+EndTable
 
 'Define Subroutines
 'Sub
@@ -47,20 +49,19 @@ DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoalloca
 
 'Main Program
 BeginProg
-  SerialOpen (ComC5,19200,0,0,90,0)
+  SerialOpen (PortEco,19200,0,0,200,0)
   Scan (1,Sec,3,0)
-    'Each Eco record is a tab-delimited string of 44 bytes including <cr><lf>:
-    '99/99/99	99:99:99	695	38	700	49	460	41	999<cr><lf>
-    SerialInRecord (ComC5,RawString,0,42,&H0D0A,NBytesReturned,01)
-    SplitStr (SplitStrings(),RawString,09,9,5)
-    Chl470=SplitStrings(3)
-    Beta700=SplitStrings(5)
-    FDOM=SplitStrings(7)
-'    PanelTemp (PTemp,15000)09
-'    Battery (Batt_volt)
-'    'Enter other measurement instructions
-'    'Call Output Tables
-'    'Example:
+    'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
+    '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
+     SerialInRecord (PortEco,RawString,&h0A,0,&h0D,NBytesReturned,01)   
+    
+    'Get counts for each measurement by splitingt string at tabs CHR(09)
+    SplitStr (SplitStrings(1),RawString,CHR(09),9,5)
+    Chl470=SplitStrings(4)      'xx38, where xx are additional digits
+    Beta700=SplitStrings(6)     'xx49
+    FDOM=SplitStrings(8)        'xx41
+    
+    'Update table
     CallTable EcoTriplet
   NextScan
 EndProg
