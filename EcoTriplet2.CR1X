@@ -1,0 +1,100 @@
+'CR1000X Series Datalogger
+'The datalogger type listed on line 1 determines the default instruction set,
+'compiler, and help files used for a program that uses the .DLD or .CRB program
+'extension. These options can also be set using the Set Datalogger Type dialog box
+'(CRBasic Editor|Tools|Set Datalogger Type).
+
+'For programming tips, copy this address to your browser
+'search window:https://www.campbellsci.com/videos/datalogger-programming
+
+'To create a different opening program template, type in new
+'instructions and select Template | Save as Default Template
+
+'Date: 2023-08-15
+'Program author: Eric Rehm, Sea-Bird Scientific
+'
+' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
+' 44 bytes + 44 (allow for extra record) = 88 butes --> 90 byte BufferSize
+
+'Declare Constants
+Const PortEco = ComC5
+Const PortEco2 = ComC3
+
+'Declare Public Variables
+'Example:
+Public RawString As String * 100, SplitStrings(9) As String * 32
+Public RawString_2 As String * 100, SplitStrings_2(9) As String * 32
+Public Chl470 As Long, Beta700 As Long, FDOM  As Long
+Public Chl470_2 As Long, Beta700_2 As Long, FDOM_2  As Long
+Public NBytesReturned,  NBytesReturned_2
+
+Units Chl470=counts
+Units Beta700=counts
+Units FDOM=counts
+
+Units Chl470_2=counts
+Units Beta700_2=counts
+Units FDOM_2=counts
+
+'Declare Private Variables
+'Example:
+'Dim Counter
+
+'Define Data Tables
+DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,Chl470,Long)
+   Sample (1,Beta700,Long)   
+   Sample (1,FDOM,Long)
+   Sample (1,RawString,String) 
+EndTable
+
+DataTable (EcoTriplet2,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,Chl470_2,Long)
+   Sample (1,Beta700_2,Long)   
+   Sample (1,FDOM_2,Long)
+   Sample (1,RawString_2,String) 
+EndTable
+'Define Subroutines
+'Sub
+'EnterSub instructions here
+'EndSub
+
+'Main Program
+BeginProg
+  SerialOpen (PortEco,19200,0,0,200,0)
+  SerialOpen (PortEco2,19200,0,0,200)
+  
+  Scan (1,Sec,3,0)
+    'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
+    '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
+     SerialInRecord (PortEco, RawString,  &h0A,0,&h0D,NBytesReturned,  01) 
+     SerialInRecord (PortEco2,RawString_2,&h0A,0,&h0D,NBytesReturned_2,01) 
+       
+     If NBytesReturned >= 42 Then
+       
+      'Get counts for each measurement by splitingt string at tabs CHR(09)
+      SplitStr (SplitStrings(1),RawString,CHR(09),9,5)
+      Chl470=SplitStrings(4)      'xx38, where xx are additional digits
+      Beta700=SplitStrings(6)     'xx49
+      FDOM=SplitStrings(8)        'xx41
+      
+    'Update table
+      CallTable EcoTriplet
+    EndIf
+    
+    If NBytesReturned_2 >= 42 Then
+       
+      'Get counts for each measurement by splitingt string at tabs CHR(09)
+      SplitStr (SplitStrings_2(1),RawString_2,CHR(09),9,5)
+      Chl470_2=SplitStrings_2(4)      'xx38, where xx are additional digits
+      Beta700_2=SplitStrings_2(6)     'xx49
+      FDOM_2=SplitStrings_2(8)        'xx41
+      
+    'Update table
+      CallTable EcoTriplet2
+    EndIf
+  NextScan
+ 
+  
+EndProg
+
