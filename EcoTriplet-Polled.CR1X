@@ -1,0 +1,92 @@
+'CR1000X Series Datalogger
+'The datalogger type listed on line 1 determines the default instruction set,
+'compiler, and help files used for a program that uses the .DLD or .CRB program
+'extension. These options can also be set using the Set Datalogger Type dialog box
+'(CRBasic Editor|Tools|Set Datalogger Type).
+
+'For programming tips, copy this address to your browser
+'search window:https://www.campbellsci.com/videos/datalogger-programming
+
+'To create a different opening program template, type in new
+'instructions and select Template | Save as Default Template
+
+'Date: 2023-08-15
+'Program author: Eric Rehm, Sea-Bird Scientific
+'
+' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
+' 44 bytes + 44 (allow for extra record) = 88 butes --> 90 byte BufferSize
+
+'Declare Constants
+Const PortEco = ComC3
+
+'Declare Public Variables
+'Example:
+Public RawString As String * 100, SplitStrings(9) As String * 32
+Public Chl470 As Long, Beta700 As Long, FDOM  As Long
+Public NBytesReturned
+
+Units Chl470=counts
+Units Beta700=counts
+Units FDOM=counts
+
+'Declare Private Variables
+'Example:
+'Dim Counter
+
+'Define Data Tables
+DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,Chl470,Long)
+   Sample (1,Beta700,Long)   
+   Sample (1,FDOM,Long)
+   Sample (1,RawString,String) 
+EndTable
+
+'Define Subroutines
+'Sub
+'EnterSub instructions here
+'EndSub
+
+'Main Program
+BeginProg
+      
+  SerialOpen (PortEco,19200,0,0,200)
+  
+  'One second scan loop
+  Scan (1,Sec,0,0)
+    
+    'Synchronize CR1000x time every minute (hour, day?) with NTP server
+    'us.pool.ntp.org within 1000 ms.
+    If IfTime(0,1,min) Then
+      NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
+    EndIf
+    
+    'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
+    '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
+    SerialInRecord (PortEco,RawString,&h0A,0,&h0D,NBytesReturned,01) 
+       
+      If NBytesReturned >= 42 Then
+       
+        'Get counts for each measurement by spliting string at tabs CHR(09)
+        SplitStr (SplitStrings(1),RawString,CHR(09),9,5)
+        Chl470=SplitStrings(4)      'xx38, where xx are additional digits
+        Beta700=SplitStrings(6)     'xx49
+        FDOM=SplitStrings(8)        'xx41
+        
+        'Update table
+        CallTable EcoTriplet
+    EndIf
+  NextScan
+  
+  'Slower (or faster) scan looops go here.  Four Scan() loops max
+  'Slow scan loop 1 : 20 sec
+  SlowSequence
+    Scan (20,Sec,0,0)
+      'Send command to ECO to output 1 set of 10 samples at 1 Hz ever 20 s: 
+      'ECO must be configured as: "$pkt 10", "$set 1",
+      'and "$ave N", where N results in ~1 Hz data 
+      SerialOut(PortEco, CHR(13)&"$run"&CHR(13), "", 1, 10)
+    NextScan
+  EndSequence
+    
+EndProg
+
