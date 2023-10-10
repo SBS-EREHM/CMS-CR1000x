@@ -1,0 +1,97 @@
+'CR1000X Series Datalogger
+'The datalogger type listed on line 1 determines the default instruction set,
+'compiler, and help files used for a program that uses the .DLD or .CRB program
+'extension. These options can also be set using the Set Datalogger Type dialog box
+'(CRBasic Editor|Tools|Set Datalogger Type).
+
+'For programming tips, copy this address to your browser
+'search window:https://www.campbellsci.com/videos/datalogger-programming
+
+'To create a different opening program template, type in new
+'instructions and select Template | Save as Default Template
+
+'Date: 2023-08-15
+'Program author: Eric Rehm, Sea-Bird Scientific
+'
+' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
+' 44 bytes + 44 (allow for extra record) = 88 butes --> 90 byte BufferSize
+
+'Declare Constants
+Const PortSUNA = ComC5
+
+'Declare Public Variables
+'Example:
+Public RawString As String * 2500, SplitStrings(285) As String * 32
+Public LDtag As String, Date As Long, Time As Float
+Dim NO3 As Float, Nitrogen As Float
+'Dim A254 As Float, A350 As Float, BrTrace As Float
+'Dim SpecAvg As Long, Dark As Long, IntTime As Long
+'Dim IntTemp As Float, SpecTemp As Float, LampTemp As Float
+'Dim LampOnTime As Long
+'Dim RH As Float, Vmain As Float, Vlamp As Float, Vint As Float, Imain As Float
+'Dim FitRMSE As Float
+
+Public NBytesReturned
+
+'Units Chl470=counts
+'Units Beta700=counts
+'Units FDOM=counts
+
+'Declare Private Variables
+'Example:
+'Dim Counter
+
+'Define Data Tables
+DataTable (SUNA,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,LDtag,String)
+   Sample (1,Date,Long)   
+   Sample (1,Time,Float)
+   Sample (1,NO3,Float)
+   Sample (1,Nitrogen,Float)
+   Sample (1,RawString,String) 
+EndTable
+
+'Define Subroutines
+'Sub
+'EnterSub instructions here
+'EndSub
+
+'Main Program
+BeginProg
+  SerialOpen (PortSUNA,57600,0,0,2500,0)
+  Scan (1,Sec,3,0)
+    
+    'Each SUNA record is a comma-delimited string of > 1000 char bytes plus <cr><lf>:
+    '<lf>SATSLF2094,2023281,3.150066,-7.49,-0.1049,0.0196,0.0330,0.00,18837,852,1,
+    '853,856, ... 4768,4417,  (128 integer spectral values)
+    '26.6,25.3,26.8,153016,0.0,14.3,12.0,5.0,464,29.95,-46.39,4.6651,
+    '-1.159033,0.000249,,,,,248<cr>
+     SerialInRecord (PortSUNA,RawString,&h0A,0,&h0D,NBytesReturned,01) 
+     If NBytesReturned > 200 Then
+      'Parse data from each Light and Dark Frame by splitting string at commas
+      SplitStr (SplitStrings(1),RawString,",",285,5)
+      
+      LDtag=SplitStrings(1)     'SATSLF2094
+      Date=SplitStrings(2)      '2023282 : day 282 in 2023
+      Time=SplitStrings(3)      '3.150066 (UTC)s
+      NO3=SplitStrings(4)       '-7.49
+      Nitrogen=SplitStrings(5)  '-0.1049
+  
+      'Update SUNA table  (Triggered on NBytesReturned > 0)
+      CallTable SUNA
+    EndIf
+  NextScan
+  
+  'Slower (or faster) scan looops go here.  Four Scan() loops max
+  'Slow scan loop 1 : 20 sec
+  SlowSequence
+    Scan (1,Min,0,0)
+      'Send command to SUNA to output 1 dark frame + 2 light frames 
+      'SUNA must be condfigured in Polled mode,
+       SerialOut(PortSUNA, CHR(13), "CMD?", 1, 300)
+       SerialOut(PortSUNA, "measure 2"&CHR(13), "", 1, 50)
+    NextScan
+  EndSequence
+ 
+EndProg
+
