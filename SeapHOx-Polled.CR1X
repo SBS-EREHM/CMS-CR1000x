@@ -1,0 +1,133 @@
+'CR1000X Series Datalogger
+'The datalogger type listed on line 1 determines the default instruction set,
+'compiler, and help files used for a program that uses the .DLD or .CRB program
+'extension. These options can also be set using the Set Datalogger Type dialog box
+'(CRBasic Editor|Tools|Set Datalogger Type).
+
+'SeapHOx Unit Test
+'Date: 2023-10-11
+'Program author: Eric Rehm, Sea-Bird Scientific
+'
+
+'Declare Constants
+Const PortSeapHOx = ComC5
+
+'Declare Public Variables
+Public SPHOX_RawString As String * 200
+Public SPHOX_NBytesReturned
+
+'Declare Private Variables
+'Example:
+'Dim Counter
+
+'Define Data Tables
+DataTable (SeapHOx,1,-1) 'Set table size to # of records, or -1 to autoallocate. 
+    Sample (1,SPHOX_Header,String) 
+    Sample (1,SPHOX_DateTime,String)
+    Sample (1,SPHOX_SampleNum,Long) 
+    Sample (1,SPHOX_ErrorFlags,String
+    Sample (1,SPHOX_T,Float)
+    Sample (1,SPHOX_pHext,Float) 
+    Sample (1,SPHOX_pHint,Float) 
+    Sample (1,SPHOX_VpHext,Float
+    Sample (1,SPHOX_VpHint,Float) 
+    Sample (1,SPHOX_pHtemp,Float
+    Sample (1,SPHOX_P,Float) 
+    Sample (1,SPHOX_S,Float) 
+    Sample (1,SPHOX_C,Float) 
+    Sample (1,SPHOX_Oxy,Float
+    Sample (1,SPHOX_RH,Float) 
+    Sample (1,SPHOX_Tint,Float
+    Sample (1,SPHOX_RawString,String) 
+EndTable
+
+'Define Subroutines
+Sub SeapHOxProcess(Rstring As String * 200)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store SPHOX_RawString anyway.
+  '
+  'outputformat=1 (engineering values)
+  'Each SeapHOx record is a comma-delimited string of > 100 char bytes plus <cr><lf>:
+  '  
+  'FrameSync, DateTime(UTC+00:00), Sample Number(#), Error Flags(#),
+  'Temperature(Celsius), External pH(pH), Internal pH(pH), 
+  'External pH(Volt), Internal pH(Volt), pH Temperature(Celsius),
+  'Pressure(Decibar), Salinity(psu), Conductivity(S/m), Oxygen(ml/L),
+  'Relative Humidity(%), INT Temperature(Celsius)
+  '  
+  '<lf>SSPHOX02106,2023-10-11T13:17:19, -1, 0000, 
+  '19.9791,3.0148,6.2442,
+  '-0.962310,-1.010671, 18.7646,   
+  '-0.219,   0.0100,  0.00002,  8.894,  
+  '3.4,20.3<cr>
+
+  Public SPHOX_Header As String, SPHOX_DateTime As String
+  Public SPHOX_SampleNum As Long, SPHOX_ErrorFlags As String
+  Public SPHOX_pHext As Float, SPHOX_pHint As Float, SPHOX_VpHext As Float
+  Public SPHOX_VpHint As Float, SPHOX_pHtemp As Float
+  Public SPHOX_T As Float, SPHOX_P As Float, SPHOX_C As Float, 
+  Public SPHOX_S As Float, SPHOX_Oxy As Float
+  Public SPHOX_RH As Float, SPHOX_Tint As Float
+  
+  Dim SplitStrs(16) As String * 32
+  
+  SplitStr (SplitStrs(1),RString,",",16,5)
+  SPHOX_Header=SplitStrs(1)     'SSPHO02106 (example, s/n may vary)
+  SPHOX_DateTime=SplitStrs(2)   '2023-10-11T13:17:19
+  SPHOX_SampleNum=SplitStrs(3)
+  SPHOX_ErrorFlags=SplitStrs(4)
+  SPHOX_T=SplitStrs(5)
+  SPHOX_pHext=SplitStrs(6)
+  SPHOX_pHint=SplitStrs(7)
+  SPHOX_VpHext=SplitStrs(8)
+  SPHOX_VpHint=SplitStrs(9)
+  SPHOX_pHtemp=SplitStrs(10)
+  SPHOX_P=SplitStrs(11)
+  SPHOX_S=SplitStrs(12)
+  SPHOX_C=SplitStrs(13)
+  SPHOX_Oxy=SplitStrs(14)
+  SPHOX_RH=SplitStrs(15)
+  SPHOX_Tint=SplitStrs(16)
+EndSub 
+
+'Main Program
+BeginProg
+  SerialOpen (PortSeapHOx,115200,0,0,250,0)
+  Scan (1,Sec,3,0)
+    
+    'Read in the SeapHOX record, a comma-delimited string of > 100 char bytes plus <cr><lf>:
+    'Wanted data followed by <Executed/>, so tell SerialInRecord to record 
+    'oldest record in serial buffer (Option = 10)
+     SerialInRecord (PortSeapHOx,SPHOX_RawString,&h0A,0,&h0D,SPHOX_NBytesReturned,10) 
+     
+'     Another way to do this is set BeginChar in SerialInRecrord to "SS" from "SSPHOX" header
+'     SerialInRecord (PortSeapHOx,RawString,&h5353,0,&h0D,NBytesReturned,10) 
+'     SplitStr (SplitStrings(1), RawString, ",", 1, 5)
+'     Header=Left(SplitStrings(1),2)
+'     If Header="PH" Then
+     
+     'Just after SeapHOx output, another short line <Executed/> is output: skip it.
+     If SPHOX_NBytesReturned > 100 Then
+  
+      'Parse Raw string and Update SeapHOx table
+      Call SeapHOxProcess(SPHOX_RawString)
+      CallTable SeapHOx
+    EndIf
+  NextScan
+  
+  'Slower (or faster) scan looops go here.  Four Scan() loops max
+  'Slow scan loop 1 : 1 Min
+  SlowSequence
+    Scan (1,Min,0,0)
+      '1. Wake up SeapHOx with a <cr>.  Wait 3 sec for <Executed/> tag.
+      '2. Send command To SeapHOx for one Sample with pump "tps" OR "tpss"
+      '   (The extra "s" stores data internally.)
+      'For testing, use 'ts' or 'tss' (no pump).  
+       SerialOut(PortSeapHOx, CHR(13), "<Executed/>"&CHR(13)&CHR(10), 1, 300)
+       SerialOut(PortSeapHOx, "ts"&CHR(13), "", 1, 50)
+    NextScan
+  EndSequence
+ 
+EndProg
+
