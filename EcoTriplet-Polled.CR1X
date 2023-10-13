@@ -16,35 +16,51 @@
 ' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
 ' 44 bytes + 44 (allow for extra record) = 88 butes --> 90 byte BufferSize
 
+
 'Declare Constants
 Const PortEco = ComC3
 
-'Declare Public Variables
-'Example:
-Public RawString As String * 100, SplitStrings(9) As String * 32
-Public Chl470 As Long, Beta700 As Long, FDOM  As Long
-Public NBytesReturned
+'Declare ConstantsVariables
+Public ECO_RawString As String * 100
+Public ECO_NBytesReturned
 
-Units Chl470=counts
-Units Beta700=counts
-Units FDOM=counts
+Units ECO_Chl470=counts
+Units ECO_Beta700=counts
+Units ECO_FDOM=counts
 
 'Declare Private Variables
 'Example:
 'Dim Counter
 
 'Define Data Tables
-DataTable (EcoTriplet,1,-1) 'Set table size to # of records, or -1 to autoallocate.
-   Sample (1,Chl470,Long)
-   Sample (1,Beta700,Long)   
-   Sample (1,FDOM,Long)
-   Sample (1,RawString,String) 
+DataTable (EcoTriplet,True,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,ECO_Chl470,Long)
+   Sample (1,ECO_Beta700,Long)   
+   Sample (1,ECO_FDOM,Long)
+   Sample (1,ECO_RawString,String) 
 EndTable
 
 'Define Subroutines
-'Sub
-'EnterSub instructions here
-'EndSub
+Sub ECOProcess(Rstring As String * 100)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store ECO_RawString anyway.
+
+  'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
+  '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
+
+  Public ECO_Chl470 As Long
+  Public ECO_Beta700 As Long
+  Public ECO_FDOM As Long
+  
+  Dim SplitStrs(9) As String * 32
+  
+  'Get counts for each measurement by spliting string at tabs CHR(09)
+  SplitStr (SplitStrs(1),Rstring,CHR(09),9,5)
+  ECO_Chl470=SplitStrs(4)     'xx38, where xx are additional digits
+  ECO_Beta700=SplitStrs(6)    'xx49
+  ECO_FDOM=SplitStrs(8)       'xx41
+EndSub
 
 'Main Program
 BeginProg
@@ -60,19 +76,12 @@ BeginProg
       NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
     EndIf
     
-    'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
-    '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
-    SerialInRecord (PortEco,RawString,&h0A,0,&h0D,NBytesReturned,01) 
-       
-      If NBytesReturned >= 42 Then
-       
-        'Get counts for each measurement by spliting string at tabs CHR(09)
-        SplitStr (SplitStrings(1),RawString,CHR(09),9,5)
-        Chl470=SplitStrings(4)      'xx38, where xx are additional digits
-        Beta700=SplitStrings(6)     'xx49
-        FDOM=SplitStrings(8)        'xx41
-        
-        'Update table
+    'Read in the ECO record, a comma-delimited string of >= 42 bytes plus <cr><lf>
+    SerialInRecord (PortEco,ECO_RawString,&h0A,0,&h0D,ECO_NBytesReturned,01)        
+      If ECO_NBytesReturned >= 42 Then
+   
+        'Parse raw string and update table
+        Call ECOProcess(ECO_RawString)
         CallTable EcoTriplet
     EndIf
   NextScan
@@ -89,4 +98,3 @@ BeginProg
   EndSequence
     
 EndProg
-
