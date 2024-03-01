@@ -10,7 +10,7 @@
 '
 
 'Declare Constants
-Const PortSeapHOx = ComC5
+Const PortSeapHOx = ComC7
 
 'Declare Public Variables
 Public SPHOX_RawString As String * 200

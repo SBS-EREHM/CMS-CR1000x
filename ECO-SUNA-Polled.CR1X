@@ -1,0 +1,201 @@
+'CR1000X Series Datalogger
+'The datalogger type listed on line 1 determines the default instruction set,
+'compiler, and help files used for a program that uses the .DLD or .CRB program
+'extension. These options can also be set using the Set Datalogger Type dialog box
+'(CRBasic Editor|Tools|Set Datalogger Type).
+
+'For programming tips, copy this address to your browser
+'search window:https://www.campbellsci.com/videos/datalogger-programming
+
+'To create a different opening program template, type in new
+'instructions and select Template | Save as Default Template
+
+'Date: 2024-02-02
+'Program author: Eric Rehm, Sea-Bird Scientific
+'
+' SUNA : omma-delimited string of > 1100 bytes plus <cr><lf>
+' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
+' 44 bytes + 44 (allow for extra record) = 88 butes --> 90 byte BufferSize
+
+'Declare Constants
+Const PortSUNA = ComC5
+Const PortEco = ComC3
+
+'Declare Public Variables
+
+Public SUNA_RawString As String * 2500
+'  , SplitStrings(285) As String * 32
+Public SUNA_NBytesReturned
+Public ECO_RawString As String * 100
+Public ECO_NBytesReturned
+
+Units ECO_Chl470=counts
+Units ECO_Beta700=counts
+Units ECO_FDOM=counts
+
+'Declare Private Variables
+'Example:
+'Dim Counter
+
+'Define Data Tables
+DataTable (SUNA,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,SUNA_Header,String)
+   Sample (1,SUNA_Date,Long)   
+   Sample (1,SUNA_Time,Float)
+   Sample (1,SUNA_NO3,Float)
+   Sample (1,SUNA_Nitrogen,Float)
+   Sample (1,SUNA_A254,Float)
+   Sample (1,SUNA_A350,Float)
+   Sample (1,SUNA_BrTrace,Float)
+   Sample (1,SUNA_SpecAvg,Long)
+   Sample (1,SUNA_Dark,Long)
+   Sample (1,SUNA_IntTime,Long)
+   Sample (1,SUNA_TempInt,Float)
+   Sample (1,SUNA_TempSpec,Float)
+   Sample (1,SUNA_TempLamp,Float)
+   Sample (1,SUNA_LampOnTime,Long)
+   Sample (1,SUNA_RH,Float)
+   Sample (1,SUNA_Vmain,Float)
+   Sample (1,SUNA_Vlamp,Float)
+   Sample (1,SUNA_Vint,Float)
+   Sample (1,SUNA_Imain,Long)
+   Sample (1,SUNA_FitRMSE,Long)     
+   Sample (1,SUNA_RawString,String) 
+EndTable
+
+DataTable (EcoTriplet,True,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,ECO_Chl470,Long)
+   Sample (1,ECO_Beta700,Long)   
+   Sample (1,ECO_FDOM,Long)
+   Sample (1,ECO_RawString,String) 
+EndTable
+
+'Define Subroutines
+Sub SUNAProcess(Rstring As String * 2500)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store SUNA_RawString anyway.
+
+  'Each SUNA record is a comma-delimited string of > 1000 char bytes plus <cr><lf>:
+  '<lf>SATSLF2094,2023281,3.150066,-7.49,-0.1049,0.0196,0.0330,0.00,18837,852,1,
+  '853,856, ... 4768,4417,  (128 integer spectral values)
+  '26.6,25.3,26.8,153016,0.0,14.3,12.0,5.0,464,29.95,-46.39,4.6651,
+  '-1.159033,0.000249,,,,,248<cr>
+
+  Public SUNA_Header As String
+  Public SUNA_Date As Long, SUNA_Time As Float
+  Public SUNA_NO3 As Float, SUNA_Nitrogen As Float
+  Public SUNA_A254 As Float, SUNA_A350 As Float, SUNA_BrTrace As Float
+  Public SUNA_SpecAvg As Long, SUNA_Dark As Long, SUNA_IntTime As Long
+  Public SUNA_TempInt As Float, SUNA_TempSpec As Float
+  Public SUNA_TempLamp As Float, SUNA_LampOnTime As Long
+  Public SUNA_RH As Float, SUNA_Vmain As Float, SUNA_Vlamp As Float, 
+  Public SUNA_Vint As Float, SUNA_Imain As Float
+  Public SUNA_FitRMSE As Float
+
+  Dim SplitStrs(286) As String * 32
+  
+  SplitStr (SplitStrs(1),Rstring,",",286,5)
+  SUNA_Header=SplitStrs(1)     'SATSLF2094
+  SUNA_Date=SplitStrs(2)      '2023282 : day 282 in 2023
+  SUNA_Time=SplitStrs(3)      '3.150066 (UTC)s
+  SUNA_NO3=SplitStrs(4)       '-7.49
+  SUNA_Nitrogen=SplitStrs(5)  '-0.1049
+  SUNA_A254=SplitStrs(6)
+  SUNA_A350=SplitStrs(7)
+  SUNA_BrTrace=SplitStrs(8)
+  SUNA_SpecAvg=SplitStrs(9)
+  SUNA_Dark=SplitStrs(10)
+  SUNA_IntTime=SplitStrs(11)
+  'Skip spectra : SplitStrs(12:267) (Available in SUNA_RawString)
+  SUNA_TempInt=SplitStrs(268)
+  SUNA_TempSpec=SplitStrs(269)
+  SUNA_TempLamp=SplitStrs(270)
+  SUNA_LampOnTime=SplitStrs(271)
+  SUNA_RH=SplitStrs(272)
+  SUNA_Vmain=SplitStrs(273)
+  SUNA_Vlamp=SplitStrs(274)
+  SUNA_Vint=SplitStrs(275)
+  SUNA_Imain=SplitStrs(276)
+  SUNA_FitRMSE=SplitStrs(281)    
+EndSub
+
+Sub ECOProcess(Rstring As String * 100)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store ECO_RawString anyway.
+
+  'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
+  '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
+
+  Public ECO_Chl470 As Long
+  Public ECO_Beta700 As Long
+  Public ECO_FDOM As Long
+  
+  Dim SplitStrs(9) As String * 32
+  
+  'Get counts for each measurement by spliting string at tabs CHR(09)
+  SplitStr (SplitStrs(1),Rstring,CHR(09),9,5)
+  ECO_Chl470=SplitStrs(4)     'xx38, where xx are additional digits
+  ECO_Beta700=SplitStrs(6)    'xx49
+  ECO_FDOM=SplitStrs(8)       'xx41
+EndSub
+
+
+'Main Program
+BeginProg
+  SerialOpen (PortSUNA,57600,0,0,2500,0)
+  SerialOpen (PortEco,19200,0,0,200)
+
+  Scan (1,Sec,3,0)
+    
+    'Synchronize CR1000x time every minute (hour, day?) with NTP server
+    'us.pool.ntp.org within 1000 ms.
+    If IfTime(0,1,min) Then
+      NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
+    EndIf
+    
+    'Read in the ECO record, a comma-delimited string of >= 42 bytes plus <cr><lf>
+    SerialInRecord (PortEco,ECO_RawString,&h0A,0,&h0D,ECO_NBytesReturned,01)        
+
+    'Read in the SUNA record, a comma-delimited string of > 1100 bytes plus <cr><lf>
+    SerialInRecord (PortSUNA,SUNA_RawString,&h0A,0,&h0D,SUNA_NBytesReturned,01) 
+
+    If ECO_NBytesReturned >= 42 Then
+      'Parse raw string if at least 41 char and update table
+      Call ECOProcess(ECO_RawString)
+      CallTable EcoTriplet
+    EndIf
+
+    If SUNA_NBytesReturned > 200 Then
+      'Parse raw string and update SUNA table  (Only if NBytesReturned > 200)
+      Call SUNAProcess(SUNA_RawString)
+      CallTable SUNA
+    EndIf
+  NextScan
+  
+  'Slower (or faster) scan looops go here.  Four SlowSequence / Scan() loops max
+  'Slow scan loop 1 : 1 minute (for SUNA)
+  SlowSequence
+    Scan (1,Min,0,0)
+      '1. Wake up SUNA with <cr>.  Wait for "CMD?" prompt.
+      '2. Send "measure N" command to SUNA to output 1 dark frame + N light frames 
+      'Note: SUNA must be condfigured in Polled mode.
+       SerialOut(PortSUNA, CHR(13), "CMD?", 1, 300)
+       SerialOut(PortSUNA, "measure 2"&CHR(13), "", 1, 50)
+    NextScan
+  EndSequence
+
+  'Slow scan loop 1 : 20 sec (for ECO)
+    SlowSequence
+    Scan (20,Sec,0,0)
+      'Send command to ECO to output 1 set of 10 samples at 1 Hz ever 20 s: 
+      'ECO must be configured as: "$pkt 10", "$set 1",
+      'and "$ave N", where N results in ~1 Hz data (Typically N = 11)
+      SerialOut(PortEco, CHR(13)&"$run"&CHR(13), "", 1, 10)
+    NextScan
+  EndSequence  
+  
+ 
+EndProg
+

@@ -86,13 +86,13 @@ BeginProg
     EndIf
   NextScan
   
-  'Slower (or faster) scan looops go here.  Four Scan() loops max
+  'Slower (or faster) scan looops go here.  Four SlowSequence Scan() loops max
   'Slow scan loop 1 : 20 sec
   SlowSequence
     Scan (20,Sec,0,0)
       'Send command to ECO to output 1 set of 10 samples at 1 Hz ever 20 s: 
       'ECO must be configured as: "$pkt 10", "$set 1",
-      'and "$ave N", where N results in ~1 Hz data 
+      'and "$ave N", where N results in ~1 Hz data (Typically N = 11)
       SerialOut(PortEco, CHR(13)&"$run"&CHR(13), "", 1, 10)
     NextScan
   EndSequence
