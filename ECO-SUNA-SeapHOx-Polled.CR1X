@@ -35,6 +35,11 @@ Units ECO_Chl470=counts
 Units ECO_Beta700=counts
 Units ECO_FDOM=counts
 
+Public PTemp_C, Temp_C, BattV
+Units BattV=Volts
+Units PTemp_C=Deg C
+Units Temp_C=Deg C
+
 'Declare Private Variables
 'Example:
 'Dim Counter
@@ -86,10 +91,18 @@ DataTable (SUNA,1,-1) 'Set table size to # of records, or -1 to autoallocate.
 EndTable
 
 DataTable (EcoTriplet,True,-1) 'Set table size to # of records, or -1 to autoallocate.
+   Sample (1,ECO_Header,String)
    Sample (1,ECO_Chl470,Long)
    Sample (1,ECO_Beta700,Long)   
    Sample (1,ECO_FDOM,Long)
    Sample (1,ECO_RawString,String) 
+EndTable
+
+DataTable(CR1X,True,-1)
+	DataInterval(0,30,Sec,0)
+	Sample(1,BattV,FP2)
+	Sample(1,PTemp_C,FP2)
+	Sample(1,Temp_C,FP2)
 EndTable
 
 'Define Subroutines
@@ -199,6 +212,7 @@ Sub ECOProcess(Rstring As String * 100)
   'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
   '<lf>99/99/99	99:99:99	695	xx38	700	xx49	460	xx41	999<cr>
 
+  Public ECO_Header As String
   Public ECO_Chl470 As Long
   Public ECO_Beta700 As Long
   Public ECO_FDOM As Long
@@ -207,6 +221,7 @@ Sub ECOProcess(Rstring As String * 100)
   
   'Get counts for each measurement by spliting string at tabs CHR(09)
   SplitStr (SplitStrs(1),Rstring,CHR(09),9,5)
+  ECO_Header=SplitStrs(1)
   ECO_Chl470=SplitStrs(4)     'xx38, where xx are additional digits
   ECO_Beta700=SplitStrs(6)    'xx49
   ECO_FDOM=SplitStrs(8)       'xx41
@@ -226,6 +241,11 @@ BeginProg
     If IfTime(0,1,min) Then
       NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
     EndIf
+    
+    'CR1000x battery voltage, panel temperature, Type T thermocouple temp
+		Battery (BattV)
+		PanelTemp (PTemp_C,15000)
+		TCDiff(Temp_C,1,mv200C,1,TypeT,PTemp_C,True,0,15000,1,0)
 
    'Read in the SeapHOX record, a comma-delimited string of > 100 char bytes plus <cr><lf>:
    'Wanted data followed by <Executed/>, so tell SerialInRecord to record 
@@ -256,6 +276,8 @@ BeginProg
       Call SUNAProcess(SUNA_RawString)
       CallTable SUNA
     EndIf
+    
+		CallTable CR1X 
   NextScan
   
   'Slower (or faster) scan looops go here.  Four SlowSequence / Scan() loops max
