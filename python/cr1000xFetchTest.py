@@ -1,7 +1,29 @@
+import pandas as pd
 import requests
 import json
 
-def fetch_cr1000x_json(table_name, logger_ip, *args, **kwargs):
+def cr1000x_to_dataframe(data) :
+
+    # Extract field names
+    fields = [field['name'] for field in data['head']['fields']]
+
+    # Process data
+    rows = []
+    for entry in data['data']:
+        row = dict(zip(fields, entry['vals']))
+        row['time'] = entry['time']
+        rows.append(row)
+
+    # Convert to DataFrame
+    df = pd.DataFrame(rows)
+
+    # Convert time column to datetime
+    df['time'] = pd.to_datetime(df['time'])
+
+    return df
+
+
+def cr1000x_fetch_json(table_name, logger_ip, *args, **kwargs):
     """ Fetch all data from table_name, according to mode, p1, and p2 parameter.
 
         Default: mode = 'Backfill', p1 = 300 sec
@@ -46,8 +68,7 @@ def fetch_cr1000x_json(table_name, logger_ip, *args, **kwargs):
         print("Error:", e)
         return None
 
-# Example usage
-if __name__ == "__main__":
+def main() :
 
     # Static ip of CR1000x
     logger_ip = "192.168.50.91"
@@ -68,10 +89,16 @@ if __name__ == "__main__":
     # data = fetch_cr1000x_json(table_name, logger_ip, mode)
 
     # Retrieve from CR1000x with optional named keyword arguments
-    data = fetch_cr1000x_json(table_name, logger_ip, mode=mode, p1=p1, p2=p2)
+    data = cr1000x_fetch_json(table_name, logger_ip, mode=mode, p1=p1, p2=p2)
     if data:
         print("JSON data retrieved successfully")
 
-        # Process data.  Here, we just dump it back as a pretty-printed JSON string
-        json_str = json.dumps(data, indent=4)
-        print(json_str)
+        # extract data to Pandas dataframe
+        df = cr1000x_to_dataframe(data)
+
+        # Display DataFrame
+        print(df)
+
+# Example usage
+if __name__ == "__main__":
+    main()
