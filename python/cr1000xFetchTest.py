@@ -1,83 +1,89 @@
 import pandas as pd
 import requests
 import plotly.express as px
+from dataclasses import dataclass
 
-
-def cr1000x_plot(df :pd.DataFrame, varname :str) :
+@dataclass
+class cr1000x:
     
-    # Plot one variable 
-    fig = px.scatter(df, x='time', y=varname)
-    fig.data[0].update(mode='markers+lines')
-    fig.show()
+    """Class for cr1000x"""
+    logger_ip : str
 
-def cr1000x_to_dataframe(data :dict) -> pd.DataFrame :
+    def plot(self, df :pd.DataFrame, varname :str) :
+    
+        # Plot one variable 
+        fig = px.scatter(df, x='time', y=varname)
+        fig.data[0].update(mode='markers+lines')
+        fig.show()
 
-    # Extract field names
-    fields = [field['name'] for field in data['head']['fields']]
+    def to_dataframe(self, data :dict) -> pd.DataFrame :
 
-    # Process data
-    rows = []
-    for entry in data['data']:
-        row = dict(zip(fields, entry['vals']))
-        row['time'] = entry['time']
-        rows.append(row)
+        # Extract field names
+        fields = [field['name'] for field in data['head']['fields']]
 
-    # Convert to DataFrame
-    df = pd.DataFrame(rows)
+        # Process data
+        rows = []
+        for entry in data['data']:
+            row = dict(zip(fields, entry['vals']))
+            row['time'] = entry['time']
+            rows.append(row)
 
-    # Convert time column to datetime
-    df['time'] = pd.to_datetime(df['time'])
+        # Convert to DataFrame
+        df = pd.DataFrame(rows)
 
-    return df
+        # Convert time column to datetime
+        df['time'] = pd.to_datetime(df['time'])
+
+        return df
 
 
-def cr1000x_fetch_json(table_name :str, logger_ip :str, *args, **kwargs) -> dict:
-    """ Fetch all data from table_name, according to mode, p1, and p2 parameter.
+    def fetch(self, table_name :str, *args, **kwargs) -> dict:
+        """ Fetch all data from table_name, according to mode, p1, and p2 parameter.
 
-        Default: mode = 'Backfill', p1 = 300 sec
+            Default: mode = 'Backfill', p1 = 300 sec
 
-        Return it as a Python dict.
+            Return it as a Python dict.
 
-        Campbell CR1000x Web Server API commands documented here:
-        https://help.campbellsci.com/crbasic/cr1000x/Content/Info/webserverapicommands1.htm
+            Campbell CR1000x Web Server API commands documented here:
+            https://help.campbellsci.com/crbasic/cr1000x/Content/Info/webserverapicommands1.htm
+            
+        """
+        # get optional arguments
+        # Default mode is 'Backfill' with last 5 min of data (300 s)
+        mode = kwargs.get('mode', 'Backfill')
+        p1 = kwargs.get('p1', 300)
+        p2 = kwargs.get('p2', None)
+
+        # Define API endpoint URL
+        endpoint = f"http://{self.logger_ip}/"
+    
+        # Basic dataquery returning json 
+        params = {
+            "command" : "dataquery",
+            "Uri": f"dl:{table_name}",
+            "format" : "json",
+            "mode" : mode,
+            "p1" : p1,
+        }
+
+        if not (p2 is None) :
+            params['p2'] = p2
         
-    """
-    # get optional arguments
-    # Default mode is 'Backfill' with last 5 min of data (300 s)
-    mode = kwargs.get('mode', 'Backfill')
-    p1 = kwargs.get('p1', 300)
-    p2 = kwargs.get('p2', None)
+        # Try http dataquery to the CR1000x
+        try:
+            # Send GET request to fetch data
+            response = requests.get(endpoint, params=params)
 
-    # Define API endpoint URL
-    endpoint = f"http://{logger_ip}/"
-   
-    # Basic dataquery returning json 
-    params = {
-        "command" : "dataquery",
-        "Uri": f"dl:{table_name}",
-        "format" : "json",
-        "mode" : mode,
-        "p1" : p1,
-    }
-
-    if not (p2 is None) :
-        params['p2'] = p2
-    
-    # Try http dataquery to the CR1000x
-    try:
-        # Send GET request to fetch data
-        response = requests.get(endpoint, params=params)
-
-        # Check if request was successful
-        if response.status_code == 200:
-            data = response.json()
-            return data
-        else:
-            print("Error fetching data. Status code:", response.status_code)
+            # Check if request was successful
+            if response.status_code == 200:
+                data = response.json()
+                return data
+            else:
+                print("Error fetching data. Status code:", response.status_code)
+                return None
+        except Exception as e:
+            print("Error:", e)
             return None
-    except Exception as e:
-        print("Error:", e)
-        return None
 
 def main() :
 
@@ -100,20 +106,22 @@ def main() :
     # data = fetch_cr1000x_json(table_name, logger_ip, mode)
 
     # Retrieve from CR1000x with optional named keyword arguments
-    data = cr1000x_fetch_json(table_name, logger_ip, mode=mode, p1=p1, p2=p2)
+    datalogger = cr1000x(logger_ip)
+
+    data = datalogger.fetch(table_name, mode=mode, p1=p1, p2=p2)
 
     # Process data into dataframe, then plot it.
     if data:
         print("JSON data retrieved successfully")
 
         # extract data to Pandas dataframe
-        df = cr1000x_to_dataframe(data)
+        df = datalogger.to_dataframe(data)
 
         # Display DataFrame
-        print(df)
+        print(df.head)
 
         # plot one variable vs. time
-        cr1000x_plot(df, 'ECO_Beta700')
+        datalogger.plot(df, 'ECO_Beta700')
 
 # Example usage
 if __name__ == "__main__":
