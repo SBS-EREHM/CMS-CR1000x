@@ -17,9 +17,11 @@ def fetch_cr1000x_json(table_name, logger_ip, *args, **kwargs):
         "Uri": f"dl:{table_name}",
         "format" : "json",
         "mode" : mode,
-        "p1" : p1
-
+        "p1" : p1,
     }
+
+    if not (p2 is None) :
+        params['p2'] = p2
     
     # Try http dataquery to the CR1000x
     try:
