@@ -3,14 +3,14 @@ import requests
 import plotly.express as px
 
 
-def cr1000x_plot(df, varname) :
+def cr1000x_plot(df :pd.DataFrame, varname :str) :
     
     # Plot one variable 
     fig = px.scatter(df, x='time', y=varname)
     fig.data[0].update(mode='markers+lines')
     fig.show()
 
-def cr1000x_to_dataframe(data) :
+def cr1000x_to_dataframe(data :dict) -> pd.DataFrame :
 
     # Extract field names
     fields = [field['name'] for field in data['head']['fields']]
@@ -31,7 +31,7 @@ def cr1000x_to_dataframe(data) :
     return df
 
 
-def cr1000x_fetch_json(table_name, logger_ip, *args, **kwargs):
+def cr1000x_fetch_json(table_name :str, logger_ip :str, *args, **kwargs) -> dict:
     """ Fetch all data from table_name, according to mode, p1, and p2 parameter.
 
         Default: mode = 'Backfill', p1 = 300 sec
