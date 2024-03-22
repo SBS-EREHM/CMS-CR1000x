@@ -105,9 +105,10 @@ def main() :
     # Retrieve using default mode='Backfill', p1=300 sec
     # data = fetch_cr1000x_json(table_name, logger_ip, mode)
 
-    # Retrieve from CR1000x with optional named keyword arguments
+    # Create datalogger object
     datalogger = cr1000x(logger_ip)
 
+    # Retrieve from CR1000x with optional named keyword arguments
     data = datalogger.fetch(table_name, mode=mode, p1=p1, p2=p2)
 
     # Process data into dataframe, then plot it.
