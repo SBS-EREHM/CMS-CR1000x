@@ -1,8 +1,15 @@
 import requests
+import json
 
 def fetch_cr1000x_json(table_name, logger_ip, *args, **kwargs):
+    """ Fetch all data from table_name, according to mode, p1, and p2 parameter.
 
-    # get optional arguments
+        Default: mode = 'Backfill', p1 = 300 sec
+
+        Return it as a Python dict.
+        
+    """
+        # get optional arguments
     # Default mode is 'Backfill' with last 5 min of data (300 s)
     mode = kwargs.get('mode', 'Backfill')
     p1 = kwargs.get('p1', 300)
@@ -60,7 +67,11 @@ if __name__ == "__main__":
     # Retrieve using default mode='Backfill', p1=300 sec
     # data = fetch_cr1000x_json(table_name, logger_ip, mode)
 
-    # Retrieve with optional named keyword arguments
-    data = fetch_cr1000x_json(table_name, logger_ip, mode=mode, p1=p1)
+    # Retrieve from CR1000x with optional named keyword arguments
+    data = fetch_cr1000x_json(table_name, logger_ip, mode=mode, p1=p1, p2=p2)
     if data:
-        print("Data retrieved successfully:", data)
+        print("JSON data retrieved successfully")
+
+        # Process data.  Here, we just dump it back as a pretty-printed JSON string
+        json_str = json.dumps(data, indent=4)
+        print(json_str)
