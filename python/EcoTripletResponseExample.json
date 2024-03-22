@@ -1,0 +1,163 @@
+{
+    "head": {
+        "transaction": 0,
+        "signature": 44162,
+        "environment": {
+            "station_name": "44340",
+            "table_name": "EcoTriplet",
+            "model": "CR1000X",
+            "serial_no": "44340",
+            "os_version": "CR1000X.Std.06.00",
+            "prog_name": "CPU:ECO-SUNA-SeapHOx-Polled.CR1X"
+        },
+        "fields": [
+            {
+                "name": "ECO_Header",
+                "type": "xsd:string",
+                "process": "Smp",
+                "settable": false,
+                "string_len": 24
+            },
+            {
+                "name": "ECO_Chl470",
+                "type": "xsd:int",
+                "units": "counts",
+                "process": "Smp",
+                "settable": false
+            },
+            {
+                "name": "ECO_Beta700",
+                "type": "xsd:int",
+                "units": "counts",
+                "process": "Smp",
+                "settable": false
+            },
+            {
+                "name": "ECO_FDOM",
+                "type": "xsd:int",
+                "units": "counts",
+                "process": "Smp",
+                "settable": false
+            },
+            {
+                "name": "ECO_RawString",
+                "type": "xsd:string",
+                "process": "Smp",
+                "settable": false,
+                "string_len": 104
+            }
+        ]
+    },
+    "data": [
+        {
+            "time": "2024-03-02T00:04:31",
+            "no": 197,
+            "vals": [
+                "ECOV2-00282",
+                176,
+                4112,
+                190,
+                "ECOV2-00282\t2024-03-05T17:03:05\t695\t176\t700\t4112\t695\t190"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:43",
+            "no": 198,
+            "vals": [
+                "ECOV2-00282",
+                177,
+                4122,
+                190,
+                "ECOV2-00282\t2024-03-05T17:03:17\t695\t177\t700\t4122\t695\t190"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:44",
+            "no": 199,
+            "vals": [
+                "ECOV2-00282",
+                176,
+                4118,
+                189,
+                "ECOV2-00282\t2024-03-05T17:03:18\t695\t176\t700\t4118\t695\t189"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:45",
+            "no": 200,
+            "vals": [
+                "ECOV2-00282",
+                176,
+                4116,
+                191,
+                "ECOV2-00282\t2024-03-05T17:03:19\t695\t176\t700\t4116\t695\t191"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:46",
+            "no": 201,
+            "vals": [
+                "ECOV2-00282",
+                177,
+                4116,
+                189,
+                "ECOV2-00282\t2024-03-05T17:03:20\t695\t177\t700\t4116\t695\t189"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:47",
+            "no": 202,
+            "vals": [
+                "ECOV2-00282",
+                175,
+                4114,
+                189,
+                "ECOV2-00282\t2024-03-05T17:03:21\t695\t175\t700\t4114\t695\t189"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:48",
+            "no": 203,
+            "vals": [
+                "ECOV2-00282",
+                178,
+                4113,
+                189,
+                "ECOV2-00282\t2024-03-05T17:03:22\t695\t178\t700\t4113\t695\t189"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:49",
+            "no": 204,
+            "vals": [
+                "ECOV2-00282",
+                178,
+                4113,
+                187,
+                "ECOV2-00282\t2024-03-05T17:03:23\t695\t178\t700\t4113\t695\t187"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:50",
+            "no": 205,
+            "vals": [
+                "ECOV2-00282",
+                175,
+                4113,
+                190,
+                "ECOV2-00282\t2024-03-05T17:03:24\t695\t175\t700\t4113\t695\t190"
+            ]
+        },
+        {
+            "time": "2024-03-02T00:04:51",
+            "no": 206,
+            "vals": [
+                "ECOV2-00282",
+                177,
+                4114,
+                188,
+                "ECOV2-00282\t2024-03-05T17:03:25\t695\t177\t700\t4114\t695\t188"
+            ]
+        }
+    ]
+}
