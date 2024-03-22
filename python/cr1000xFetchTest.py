@@ -1,6 +1,14 @@
 import pandas as pd
 import requests
-import json
+import plotly.express as px
+
+
+def cr1000x_plot(df, varname) :
+    
+    # Plot one variable 
+    fig = px.scatter(df, x='time', y=varname)
+    fig.data[0].update(mode='markers+lines')
+    fig.show()
 
 def cr1000x_to_dataframe(data) :
 
@@ -78,7 +86,7 @@ def main() :
 
     # Select desired mode and relate arguments p1, p2
     mode = 'most-recent'
-    p1 = 3      # Most recent 3 records
+    p1 = 30      # Most recent 30 records
     p2 = None 
 
     # mode = 'Backfill'
@@ -90,6 +98,8 @@ def main() :
 
     # Retrieve from CR1000x with optional named keyword arguments
     data = cr1000x_fetch_json(table_name, logger_ip, mode=mode, p1=p1, p2=p2)
+
+    # Process data into dataframe, then plot it.
     if data:
         print("JSON data retrieved successfully")
 
@@ -98,6 +108,9 @@ def main() :
 
         # Display DataFrame
         print(df)
+
+        # plot one variable vs. time
+        cr1000x_plot(df, 'ECO_Beta700')
 
 # Example usage
 if __name__ == "__main__":
