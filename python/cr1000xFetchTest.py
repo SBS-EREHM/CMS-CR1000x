@@ -37,9 +37,12 @@ def cr1000x_fetch_json(table_name, logger_ip, *args, **kwargs):
         Default: mode = 'Backfill', p1 = 300 sec
 
         Return it as a Python dict.
+
+        Campbell CR1000x Web Server API commands documented here:
+        https://help.campbellsci.com/crbasic/cr1000x/Content/Info/webserverapicommands1.htm
         
     """
-        # get optional arguments
+    # get optional arguments
     # Default mode is 'Backfill' with last 5 min of data (300 s)
     mode = kwargs.get('mode', 'Backfill')
     p1 = kwargs.get('p1', 300)
