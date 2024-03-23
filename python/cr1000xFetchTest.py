@@ -93,23 +93,25 @@ def main() :
     # Which table to retrieve
     table_name = "EcoTriplet"
 
+   
+
+    # Create datalogger object
+    datalogger = cr1000x(logger_ip)
+
+    # Retrieve using default mode='Backfill', p1=300 sec
+    data = datalogger.fetch(table_name)
+
     # Select desired mode and relate arguments p1, p2
-    mode = 'most-recent'
-    p1 = 30      # Most recent 30 records
-    p2 = None 
+    # mode = 'most-recent'
+    # p1 = 30      # Most recent 30 records
+    # p2 = None 
 
     # mode = 'Backfill'
     # p1 = 10   # Last 10 seconds of recorded data
     # p2 = 0
 
-    # Retrieve using default mode='Backfill', p1=300 sec
-    # data = fetch_cr1000x_json(table_name, logger_ip, mode)
-
-    # Create datalogger object
-    datalogger = cr1000x(logger_ip)
-
     # Retrieve from CR1000x with optional named keyword arguments
-    data = datalogger.fetch(table_name, mode=mode, p1=p1, p2=p2)
+    # data = datalogger.fetch(table_name, mode=mode, p1=p1, p2=p2)
 
     # Process data into dataframe, then plot it.
     if data:
