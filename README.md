@@ -18,7 +18,6 @@ These CRBasic programs assume sensor(s) are polled, i.e., a RS-232 or SDI-12 com
 ### Continuous Mode Sampling 
 These CRBasic programs assume the sensor is sampling continuously and does not need to be commanded to start sampling.
 
-* EXO-Continuous_SDI12.CR1X
 * EcoTriplet-Continous.CR1X
 * SUNA-Continuous.CR1X
 * YSI-Continuous.CR1X
