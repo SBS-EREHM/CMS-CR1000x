@@ -7,11 +7,8 @@
 'For programming tips, copy this address to your browser
 'search window:https://www.campbellsci.com/videos/datalogger-programming
 
-'To create a different opening program template, type in new
-'instructions and select Template | Save as Default Template
-
-'Date: 2024-02-29
-'Program author: Eric Rehm, Sea-Bird Scientific
+'Date: 2024-04-09
+'Program author: Eric Rehm, Sea-Bird Scientific, erehm@seabird.com
 '
 ' SUNA : comma-delimited string of > 1100 bytes plus <cr><lf>
 ' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
@@ -21,12 +18,14 @@
 Const PortSeapHOx = ComC7
 Const PortSUNA = ComC5
 Const PortEco = ComC3
+Const PortExo = C1    'SDI-12
 
 Const SeapHOxSampleCommand = "ts"  ' "tpss" for deployment (pump and save)
 
 Const SeapHOxSamplePeriodMin = 2  'minute  5 min for deployment
 Const SUNASamplePeriodMin = 1     'minutes  15 minutes for deployment
-Const EcoSamplePeriodSec = 20     'seconds
+Const EcoSamplePeriodSec = 20     'seconds  60 sec for deployment
+Const ExoSamplePeriodSec = 75     'seconds  900 sec for deployment
 
 'Declare Public Variables
 Public SPHOX_RawString As String * 200
@@ -35,6 +34,7 @@ Public SUNA_RawString As String * 2500
 Public SUNA_NBytesReturned
 Public ECO_RawString As String * 100
 Public ECO_NBytesReturned
+Public EXO(16)
 
 Units ECO_Chl470=counts
 Units ECO_Beta700=counts
@@ -44,6 +44,24 @@ Public PTemp_C, Temp_C, BattV
 Units BattV=Volts
 Units PTemp_C=Deg C
 Units Temp_C=Deg C
+
+'Define Aliases
+Alias EXO(1) = EXO_Date
+Alias EXO(2) = EXO_Time
+Alias EXO(3) = EXO_T
+Alias EXO(4) = EXO_CmScm
+Alias EXO(5) = EXO_S
+Alias EXO(6) = EXO_pH
+Alias EXO(7) = EXO_P
+Alias EXO(8) = EXO_z
+Alias EXO(9) = EXO_NTU
+Alias EXO(10) = EXO_ChlRFU
+Alias EXO(11) = EXO_Oxysat
+Alias EXO(12) = EXO_OxymgL
+Alias EXO(13) = EXO_PeRFU
+Alias EXO(14) = EXO_FNU
+Alias EXO(15) = EXO_BatV
+Alias EXO(16) = EXO_ExtV
 
 'Declare Private Variables
 'Example:
@@ -102,6 +120,27 @@ DataTable (EcoTriplet,True,-1) 'Set table size to # of records, or -1 to autoall
    Sample (1,ECO_FDOM,Long)
    Sample (1,ECO_RawString,String) 
 EndTable
+
+DataTable (EXOData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+' date   time   temp   Cms/cm psal pH  psig depthm NTU chlr O2%sat O2mgL PEr FNU  BattV ExtV
+' psig is coverted to pressure YSI_P in dbar during parsing.
+	Sample(1,EXO(1),Float)
+	Sample(1,EXO(2),Float)
+	Sample(1,EXO(3),Float)
+	Sample(1,EXO(4),Float)
+	Sample(1,EXO(5),Float)
+	Sample(1,EXO(6),Float)
+	Sample(1,EXO(7),Float)
+	Sample(1,EXO(8),Float)
+	Sample(1,EXO(9),Float)
+	Sample(1,EXO(10),Float)
+	Sample(1,EXO(11),Float)
+	Sample(1,EXO(12),Float)
+	Sample(1,EXO(13),Float)
+	Sample(1,EXO(14),Float)
+	Sample(1,EXO(15),Float)
+	Sample(1,EXO(16),Float)
+EndTable	
 
 DataTable(CR1X,True,-1)
 	DataInterval(0,30,Sec,0)
@@ -282,11 +321,12 @@ BeginProg
       CallTable SUNA
     EndIf
     
+    'Store CR1000x temp and voltage
 		CallTable CR1X 
   NextScan
   
   'Slower (or faster) scan looops go here.  Four SlowSequence / Scan() loops max
-  'Slow scan loop 1 : 2 minutes (for SeapHOx)
+  'Slow scan loop 1 : 5 minutes (for SeapHOx)
   SlowSequence
     Scan (SeapHOxSamplePeriodMin,Min,0,0)
       '1. Wake up SeapHOx with a <cr>.  Wait 3 sec for <Executed/> tag.
@@ -298,7 +338,7 @@ BeginProg
     NextScan
   EndSequence
   
-  'Slow scan loop 1 : 1 minute (for SUNA)
+  'Slow scan loop 2 : 15 minutes (for SUNA)
   SlowSequence
     Scan (SUNASamplePeriodMin,Min,0,0)
       '1. Wake up SUNA with <cr>.  Wait for "CMD?" prompt.
@@ -309,7 +349,7 @@ BeginProg
     NextScan
   EndSequence
 
-  'Slow scan loop 1 : 20 sec (for ECO)
+  'Slow scan loop 3 : 300 sec (for ECO)
     SlowSequence
     Scan (EcoSamplePeriodSec,Sec,0,0)
       'Send command to ECO to output 1 set of 10 samples at 1 Hz ever 20 s: 
@@ -318,5 +358,14 @@ BeginProg
       SerialOut(PortEco, CHR(13)&"$run"&CHR(13), "", 1, 10)
     NextScan
   EndSequence  
+    
+  'Slow scan loop 4 : 900 s (for YSI EXO 2)
+  SlowSequence
+    Scan (ExoSamplePeriodSec,Sec,0,0)
+      'Send SDI command '0C!' to EXO, wait for result, store in EXO() array
+      SDI12Recorder(EXO(),PortExo,"0","C!",1,0) 
+      CallTable EXOData
+    NextScan
+  EndSequence
   
 EndProg

@@ -1,0 +1,122 @@
+'CR1000X Series Datalogger
+
+'Date: 20201006
+'Program author: Craig Risien (craig.risien@oregonstate.edu)
+
+'Declare Constants
+Const PortYsi = ComC7
+Const YSI_Interval = 20 'sec
+
+'Declare Public Variables
+Public YSI_RawString As String * 200
+Public YSI_NBytesReturned
+
+'Define Data Table.
+DataTable (YSIData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+' date   time   temp   Cms/cm psal pH  psig depthm NTU chlr O2%sat O2mgL PEr FNU  BattV ExtV
+' psig is coverted to pressure YSI_P in dbar during parsing.
+	Sample (1,YSI_Date,Long)
+	Sample (1,YSI_Time,Long)
+  Sample (1,YSI_T,Float)
+	Sample (1,YSI_Cmscm,Float)
+	Sample (1,YSI_S,Float)
+  Sample (1,YSI_pH,Float)
+	Sample (1,YSI_P,Float)
+	Sample (1,YSI_z),Float)
+  Sample (1,YSI_NTU,Float)
+	Sample (1,YSI_ChlRFU,Float)
+	Sample (1,YSI_Oxysat,Float)
+	Sample (1,YSI_OxymgL,Float)
+	Sample (1,YSI_PeRFU),Float)
+	Sample (1,YSI_FNU,Float)
+	Sample (1,YSI_BatV,Float)
+	Sample (1,YSI_ExtV,Float)
+	Sample (1,YSI_RawString,String)
+EndTable
+
+'Define Subroutines
+Sub YSIProcess(Rstring As String * 100)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store YSI_RawString anyway.
+  '
+  ' Assumes YSI EXO has been configured as follows: (See EXO User Manual, Section 2.13)
+  ' # para 53 54 1 4 12 18 21 22 37 194 211 212 218 223 28 230
+  ' Example data output:
+  ' # data
+  '  240325 153604 25.011 0.001 -0.00 7.33 0.00 0.002 2.44 0.05 101.57 8.39 3.11 2.44 5.16 13.45 
+  '  date   time   temp   C ms/cm psal pH  psig depthm NTU chlr O2%sat O2mgL PEr FNU  BattV ExtV
+  
+  Public YSI_Date As String
+  Public YSI_Time As String
+  Public YSI_T As Float, YSI_Cmscm As Float, YSI_S As Float, YSI_pH As Float
+  Public YSI_P As Float, YSI_z As Float
+  Public YSI_NTU As Float, YSI_FNU As Float 
+  Public YSI_ChlRFU As Float, YSI_PeRFU As Float
+  Public YSI_Oxysat As Float, YSI_OxymgL As Float
+  Public YSI_BatV As Float, YSI_ExtV As Float
+  Public psig As Float 
+ 
+  Dim SplitStrs(16) As String * 32
+  
+  SplitStr (SplitStrs(1),Rstring," ",16,5)
+  YSI_Date=SplitStrs(1)  '240325  
+  YSI_Time=SplitStrs(2)  '153624
+  YSI_T=SplitStrs(3)
+  YSI_Cmscm=SplitStrs(4)
+  YSI_S=SplitStrs(5)
+  YSI_pH=SplitStrs(6)
+  psig=SplitStrs(7)
+  YSI_P=psig*0.689475728   'Convert psi to dbar
+  YSI_z=SplitStrs(8)
+  YSI_NTU=SplitStrs(9)
+  YSI_ChlRFU=SplitStrs(10)
+  YSI_Oxysat=SplitStrs(11)
+  YSI_OxymgL=SplitStrs(12)
+  YSI_PeRFU=SplitStrs(13)
+  YSI_FNU=SplitStrs(14)
+  YSI_BatV=SplitStrs(15)
+  YSI_ExtV=SplitStrs(16)
+EndSub 
+
+'Main Program
+BeginProg
+  
+  SerialOpen (PortYsi,9600,0,0,200,0)
+  SerialFlush (PortYsi)
+  
+	Scan (1,Sec,0,0)
+  
+    'Synchronize CR1000x time every minute (hour, day?) with NTP server
+    'us.pool.ntp.org within 1000 ms.
+    If IfTime(0,1,min) Then
+      NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
+    EndIf
+ 
+    'RealTime (rTime)
+    SerialInRecord (PortYsi,YSI_RawString,&h0A,0,&h0D,YSI_NBytesReturned,01) 
+    If YSI_NBytesReturned > 20
+      
+      'If SerialInChk (PortYsi) > 20
+      'Delay(1,5,Sec) 'to avoid sampling the buffer while data are being pushed from sonde
+      'SerialIn (YSIInStr,PortYsi,13,0,200)
+      'SplitStr (YSI_Vars(YSI_RawString," ",16,0) 'parse the incoming data
+            
+      'Parse Raw string and Update YSI table
+      Call YSIProcess(YSI_RawString)
+      CallTable YSIData
+    EndIf
+  NextScan
+  
+  'Slower (or faster) scan looops go here.  Four Scan() loops max
+  'Slow scan loop 1 : YSI_Interval (20) sec
+  SlowSequence
+    Scan (YSI_Interval,Sec,0,0)
+      'Send command to YSI to output 1 samples every 20 s: 
+      'Ysi EXO 2 must be configured via RS-232 with "pweruptorun 0"
+      SerialOut(PortYsi, CHR(13)&CHR(13)&"data"&CHR(13), "", 1, 300)
+    NextScan
+  EndSequence
+	
+EndProg
+

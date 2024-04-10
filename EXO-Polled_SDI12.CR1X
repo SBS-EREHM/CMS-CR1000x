@@ -1,0 +1,90 @@
+'CR1000X Series Datalogger
+
+'EXO 2 is controlled via SDI-12 interface on
+'DCP Signal Output Adapter.  EXO 2 is configured
+'by a template where:
+'    sample period T = ExoSamplePeriodSec = 900 sec (75 sec for testing)
+'    logger mode is "Sample and Hold"
+'    EXO is dimensioned = number of SDI output paramaters (16)
+
+' EXO SDI-12 samples when '0C!' command is issued but takes 62 seconds
+' to prepare output.  So 62 s should be subtracted from the EXO time
+' stamp in postprocessing
+
+'Date: 20240409
+'Program author: eric rehm (erehm@seabird.com)
+'Declare Constants
+Const PortExo = C1
+Const ExoSamplePeriodSec = 75  'seconds
+
+'Declare Public Variables
+Public EXO(16)
+
+'Define Aliases
+Alias EXO(1) = EXO_Date
+Alias EXO(2) = EXO_Time
+Alias EXO(3) = EXO_T
+Alias EXO(4) = EXO_CmScm
+Alias EXO(5) = EXO_S
+Alias EXO(6) = EXO_pH
+Alias EXO(7) = EXO_P
+Alias EXO(8) = EXO_z
+Alias EXO(9) = EXO_NTU
+Alias EXO(10) = EXO_ChlRFU
+Alias EXO(11) = EXO_Oxysat
+Alias EXO(12) = EXO_OxymgL
+Alias EXO(13) = EXO_PeRFU
+Alias EXO(14) = EXO_FNU
+Alias EXO(15) = EXO_BatV
+Alias EXO(16) = EXO_ExtV
+
+'Define Data Table.
+DataTable (EXOData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+' date   time   temp   Cms/cm psal pH  psig depthm NTU chlr O2%sat O2mgL PEr FNU  BattV ExtV
+' psig is coverted to pressure YSI_P in dbar during parsing.
+	Sample(1,EXO(1),Float)
+	Sample(1,EXO(2),Float)
+	Sample(1,EXO(3),Float)
+	Sample(1,EXO(4),Float)
+	Sample(1,EXO(5),Float)
+	Sample(1,EXO(6),Float)
+	Sample(1,EXO(7),Float)
+	Sample(1,EXO(8),Float)
+	Sample(1,EXO(9),Float)
+	Sample(1,EXO(10),Float)
+	Sample(1,EXO(11),Float)
+	Sample(1,EXO(12),Float)
+	Sample(1,EXO(13),Float)
+	Sample(1,EXO(14),Float)
+	Sample(1,EXO(15),Float)
+	Sample(1,EXO(16),Float)
+EndTable	
+
+'Define Subroutines
+
+
+'Main Program
+'Ysi EXO 2 configured via SDI-12
+
+BeginProg
+ 
+  'Normal scan loop (used here only for time sync)
+  Scan (1,Sec,0,0)
+	  
+    'Synchronize CR1000x time every minute (hour, day?) with NTP server
+    'us.pool.ntp.org within 1000 ms.
+    If IfTime(0,1,min) Then
+      NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
+    EndIf
+  NextScan 
+
+  'Slower (or faster) scan looops go here.  Four SlowSequence Scan() loops max
+  'Slow scan loop 4 for EXO
+  SlowSequence
+    Scan (ExoSamplePeriodSec,Sec,0,0)
+      SDI12Recorder(EXO(),PortExo,"0","C!",1,0) 
+      CallTable EXOData
+    NextScan
+  EndSequence
+  
+EndProg

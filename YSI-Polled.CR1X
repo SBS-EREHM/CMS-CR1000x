@@ -5,18 +5,16 @@
 
 
 'Declare Constants
-Const PortYsi = ComC5
+Const PortYsi = ComC7
 
 'Declare Variables
 Public PTemp, batt_volt, NBytesReturned
 Public YSIInStr As String * 100
-Public YSI_Vars(11) As String * 10
+Public YSI_Vars(16) As String * 10
 
 'Define Data Table.
 DataTable (YSIData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
 '	DataInterval (0,15,Min,10)
-	Sample (1,batt_volt,FP2)
-	Sample (1,PTemp,FP2)
 	Sample (1,YSI_Vars(1),Float)
 	Sample (1,YSI_Vars(2),Float)
   Sample (1,YSI_Vars(3),Float)
@@ -28,7 +26,12 @@ DataTable (YSIData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
   Sample (1,YSI_Vars(9),Float)
 	Sample (1,YSI_Vars(10),Float)
 	Sample (1,YSI_Vars(11),Float)
-  Sample (1,YSIInStr,String)
+	Sample (1,YSI_Vars(12),Float)
+	Sample (1,YSI_Vars(13),Float)
+	Sample (1,YSI_Vars(14),Float)
+	Sample (1,YSI_Vars(15),Float)
+	Sample (1,YSI_Vars(16),Float)
+	Sample (1,YSIInStr,String)
 EndTable
 
 'Main Program
@@ -48,7 +51,7 @@ BeginProg
       'If SerialInChk (PortYsi) > 20
       'Delay(1,5,Sec) 'to avoid sampling the buffer while data are being pushed from sonde
       'SerialIn (YSIInStr,PortYsi,13,0,200)
-      SplitStr (YSI_Vars(),YSIInStr," ",11,0) 'parse the incoming data
+      SplitStr (YSI_Vars(),YSIInStr," ",16,0) 'parse the incoming data
             
       'Call Output Table
       CallTable YSIData
@@ -63,7 +66,7 @@ BeginProg
       'Send command to YSI to output 1 samples every 20 s: 
       'Ysi EXO 2 must be configured via RS-232 with "pweruptorun 0"
       
-      SerialOut(PortYsi, CHR(13)&"data"&CHR(13), "", 1, 10)
+      SerialOut(PortYsi, CHR(13)&CHR(13)&"data"&CHR(13), "", 1, 300)
     NextScan
   EndSequence
 	

@@ -4,25 +4,17 @@
 'extension. These options can also be set using the Set Datalogger Type dialog box
 '(CRBasic Editor|Tools|Set Datalogger Type).
 
-'For programming tips, copy this address to your browser
-'search window:https://www.campbellsci.com/videos/datalogger-programming
-
-'To create a different opening program template, type in new
-'instructions and select Template | Save as Default Template
-
-'Date: 2023-08-15
+'Date: 2023-12-20
 'Program author: Eric Rehm, Sea-Bird Scientific
-'
-' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
-' 44 bytes + 44 (allow for extra record) = 88 butes --> 90 byte BufferSize
 
 'Declare Constants
 Const PortSUNA = ComC5
+Const SUNASamplePeriodMin = 1   'minutes  15 minutes for deployment
 
 'Declare Public Variables
 'Example:
 Public SUNA_RawString As String * 2500
-'  , SplitStrings(285) As String * 32
+
 Public SUNA_NBytesReturned
 
 'Units Chl470=counts
@@ -113,7 +105,13 @@ EndSub
 BeginProg
   SerialOpen (PortSUNA,57600,0,0,2500,0)
   Scan (1,Sec,3,0)
-    
+
+    'Synchronize CR1000x time every minute (hour, day?) with NTP server
+    'us.pool.ntp.org within 1000 ms.
+    If IfTime(0,1,min) Then
+      NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
+    EndIf
+     
     'Read in the SUNA record, a comma-delimited string of > 1100 bytes plus <cr><lf>
      SerialInRecord (PortSUNA,SUNA_RawString,&h0A,0,&h0D,SUNA_NBytesReturned,01) 
      If SUNA_NBytesReturned > 200 Then
@@ -127,7 +125,7 @@ BeginProg
   'Slower (or faster) scan looops go here.  Four Scan() loops max
   'Slow scan loop 1 : 20 sec
   SlowSequence
-    Scan (1,Min,0,0)
+    Scan (SUNASamplePeriodMin,Min,0,0)
       '1. Wake up SUNA with <cr>.  Wait for "CMD?" prompt.
       '2. Send "measure N" command to SUNA to output 1 dark frame + N light frames 
       'Note: SUNA must be condfigured in Polled mode.
