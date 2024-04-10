@@ -20,7 +20,6 @@ These CRBasic programs assume the sensor is sampling continuously and does not n
 
 * EcoTriplet-Continous.CR1X
 * SUNA-Continuous.CR1X
-* YSI-Continuous.CR1X
 * YSI-Continuous_RS232.CR1X
 
 _Note that YSI and EXO prefixes refer to the same YSI EXO<sup>2</sup> instrument.  The EXO prefix is reserved for CRBasic programs that access the instrument using the SDI-12 interface on the YSI DCP Signal Output Adapter._
