@@ -11,6 +11,8 @@
 
 'Declare Constants
 Const PortSeapHOx = ComC7
+Const SeapHOxSamplePeriodMin = 1   'minute
+Const SeapHOxSampleCommand = "ts"  ' "tpss" for deployment (pump and save)
 
 'Declare Public Variables
 Public SPHOX_RawString As String * 200
@@ -96,10 +98,16 @@ BeginProg
   SerialOpen (PortSeapHOx,115200,0,0,250,0)
   Scan (1,Sec,3,0)
     
+     'Synchronize CR1000x time every minute (hour, day?) with NTP server
+     'us.pool.ntp.org within 1000 ms.
+      If IfTime(0,1,min) Then
+        NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
+      EndIf
+ 
     'Read in the SeapHOX record, a comma-delimited string of > 100 char bytes plus <cr><lf>:
     'Wanted data followed by <Executed/>, so tell SerialInRecord to record 
     'oldest record in serial buffer (Option = 10)
-     SerialInRecord (PortSeapHOx,SPHOX_RawString,&h0A,0,&h0D,SPHOX_NBytesReturned,10) 
+      SerialInRecord (PortSeapHOx,SPHOX_RawString,&h0A,0,&h0D,SPHOX_NBytesReturned,10) 
      
 '     Another way to do this is set BeginChar in SerialInRecrord to "SS" from "SSPHOX" header
 '     SerialInRecord (PortSeapHOx,RawString,&h5353,0,&h0D,NBytesReturned,10) 
@@ -108,7 +116,7 @@ BeginProg
 '     If Header="PH" Then
      
      'Just after SeapHOx output, another short line <Executed/> is output: skip it.
-     If SPHOX_NBytesReturned > 100 Then
+      If SPHOX_NBytesReturned > 100 Then
   
       'Parse Raw string and Update SeapHOx table
       Call SeapHOxProcess(SPHOX_RawString)
@@ -119,13 +127,13 @@ BeginProg
   'Slower (or faster) scan looops go here.  Four Scan() loops max
   'Slow scan loop 1 : 1 Min
   SlowSequence
-    Scan (1,Min,0,0)
+    Scan (SeapHOxSamplePeriodMin,Min,0,0)
       '1. Wake up SeapHOx with a <cr>.  Wait 3 sec for <Executed/> tag.
       '2. Send command To SeapHOx for one Sample with pump "tps" OR "tpss"
       '   (The extra "s" stores data internally.)
       'For testing, use 'ts' or 'tss' (no pump).  
        SerialOut(PortSeapHOx, CHR(13), "<Executed/>"&CHR(13)&CHR(10), 1, 300)
-       SerialOut(PortSeapHOx, "ts"&CHR(13), "", 1, 50)
+       SerialOut(PortSeapHOx, SeapHOxSampleCommand&CHR(13), "", 1, 50)
     NextScan
   EndSequence
  
