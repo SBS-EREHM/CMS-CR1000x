@@ -1,0 +1,24 @@
+$seq 0     // select output sequence 0
+$ose       // start modify output sequence
+$00 240    // printf tab  (tab-delimited output)
+$01 0      // serial number header BBFL2W-xxxx
+$02 1      // date
+$03 2      // time
+$04 5      // 700 (BB-700 emission wavelength)
+$05 6      // counts (BB-700)
+$06 8      // 695 (Chl-470 emission wavelength)
+$07 9      // counts (Chl-470)
+$08 11     // 460 (fDOM emission wavelength)
+$09 12     // counts (fDOM)
+$10 14     // internal thermistor counts
+$11 255    // printf \n  (new-line terminated output)
+$99        // end modify output sequence
+$osd       // display output sequence
+$pkt 5     // burst five samples
+$set 1     // burst one set of $pkt=N samples then go to command mode
+$man 0     // Do not manually start sampling at a future time
+$rec 1     // Record samples in memory
+$emc       // Clear memory
+$clk mmddyy    // Enter UTC-time
+$date hhmmss   // Enter UTC-date
+$sto       // Store all settings above (VERY IMPORTANT!)
