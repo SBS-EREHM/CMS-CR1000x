@@ -1,0 +1,37 @@
+﻿Kor Deployment Settings File Export
+
+Deployment Name:,L142 lab test
+Deployment Settings Creation Date:,4/19/2024 12:17:35 PM
+Exported Date:,4/19/2024 1:55:26 PM
+
+
+BASIC SETTINGS
+File Name Prefix:,2403405c
+Site Name:,ilab
+Logging Interval:,00:01:15 (HH:MM:SS)
+User Name:,Eric Rehm
+Description:,75 second sample period
+SDI-12 parameters as per TChris M-C, 3/2024
+------------------------
+ADAPTIVE LOGGING SETTINGS
+Adaptive Logging State:,DISABLED
+Adaptive Logging Interval:,00:00:01 (HH:MM:SS)
+Adaptive Logging Duration:,00:00:00 (HH:MM:SS)
+Adaptive Logging Parameter 1:,Temp (°C)
+Parameter 1 Adaptive Logging Mode:,Off
+Parameter 1 Adaptive Logging Threshold:,0
+Adaptive Logging Parameter 2:,Temp (°C)
+Parameter 2 Adaptive Logging Mode:,Off
+Parameter 2 Adaptive Logging Threshold:,0
+------------------------
+LOGGING SETTINGS
+Averaging Mode:,Default
+Burst Duration:,00:00:00
+Averaging Duration:,00:00:00
+Logging Mode:,SampleAndHold
+Samples Per Wipe:,360
+------------------------
+SDI-12 SETTINGS
+Address:,0
+Parameter List:,Date (mm_dd_yy); Time (hh_mm_ss); Temp (°C); Sp Cond (mS/cm); Sal (psu); pH; Pressure (psi g); Depth (m); Turbidity (NTU); Chlorophyll (RFU); DO (% Sat); DO (mg/L); Phycoerythrin (RFU); Turbidity (FNU); Sonde Battery Power (volt); Sonde Cable Power (volt);
+------------------------

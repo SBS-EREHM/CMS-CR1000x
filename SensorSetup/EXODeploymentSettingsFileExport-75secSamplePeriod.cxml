@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ExoSoftware Version="1">
+  <DeploymentConfiguration>
+    <Deployment>
+      <Name>L142 lab test</Name>
+      <CreationDate>638491258556200975</CreationDate>
+    </Deployment>
+    <BasicSettings>
+      <FileNamePrefix>2403405c</FileNamePrefix>
+      <UserName>Eric Rehm</UserName>
+      <Description>75 second sample period
+SDI-12 parameters as per TChris M-C, 3/2024</Description>
+      <SiteName>ilab</SiteName>
+      <LoggingInterval>00:01:15</LoggingInterval>
+    </BasicSettings>
+    <AdaptiveLoggingSettings>
+      <LoggingEnabled>false</LoggingEnabled>
+      <LoggingInterval>00:00:01</LoggingInterval>
+      <LoggingDuration>00:00:00</LoggingDuration>
+      <LoggingParameter1>60</LoggingParameter1>
+      <LoggingMode1>0</LoggingMode1>
+      <LoggingThreshold1>0</LoggingThreshold1>
+      <LoggingParameter2>60</LoggingParameter2>
+      <LoggingMode2>0</LoggingMode2>
+      <LoggingThreshold2>0</LoggingThreshold2>
+    </AdaptiveLoggingSettings>
+    <LoggingSettings>
+      <AveragingMode>0</AveragingMode>
+      <AveragingDuration>00:00:00</AveragingDuration>
+      <BurstDuration>00:00:00</BurstDuration>
+      <LoggingMode>1</LoggingMode>
+      <Samples>360</Samples>
+    </LoggingSettings>
+    <Sdi12Settings>
+      <Address>0</Address>
+      <Parameter0>52</Parameter0>
+      <Parameter1>54</Parameter1>
+      <Parameter2>1</Parameter2>
+      <Parameter3>6</Parameter3>
+      <Parameter4>12</Parameter4>
+      <Parameter5>18</Parameter5>
+      <Parameter6>21</Parameter6>
+      <Parameter7>22</Parameter7>
+      <Parameter8>37</Parameter8>
+      <Parameter9>194</Parameter9>
+      <Parameter10>211</Parameter10>
+      <Parameter11>212</Parameter11>
+      <Parameter12>218</Parameter12>
+      <Parameter13>223</Parameter13>
+      <Parameter14>28</Parameter14>
+      <Parameter15>230</Parameter15>
+    </Sdi12Settings>
+  </DeploymentConfiguration>
+</ExoSoftware>
