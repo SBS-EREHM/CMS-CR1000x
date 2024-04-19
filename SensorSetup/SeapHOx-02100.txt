@@ -1,0 +1,257 @@
+getcd
+<ConfigurationData DeviceType='Deep SeapHox2' SerialNumber='0002100'>
+  <UseCTDPower>no</UseCTDPower>
+  <TxRealTime>yes</TxRealTime>
+  <SampleInterval>60</SampleInterval>
+  <SampleDataFormat>raw decimal</SampleDataFormat>
+  <FrameSync>DSPHOX</FrameSync>
+  <PumpOnTime>38.0</PumpOnTime>
+</ConfigurationData>
+<Executed/>
+getsd
+<StatusData DeviceType='Deep SeapHox2' SerialNumber='0002100'>
+  <DateTime>2024-04-19T23:08:42</DateTime>
+  <EventSummary numEvents='255'/>
+  <Power>
+    <vSystem src='External'>15.5</vSystem>
+    <vBatt>12.22</vBatt>
+    <vIso>5.86</vIso>
+    <vRTCBackup>3.15</vRTCBackup>
+  </Power>
+  <MemorySummary>
+    <Bytes>56620</Bytes>
+    <Samples>1490</Samples>
+    <SamplesFree>881521</SamplesFree>
+    <SampleLength>38</SampleLength>
+  </MemorySummary>
+  <AutonomousSampling>no, stop command</AutonomousSampling>
+</StatusData>
+<Executed/>
+getcc
+<CalibrationCoefficients DeviceType='Deep SeapHox2' SerialNumber='0002100'>
+  <Calibration format='PH2' id='pH'>
+    <SerialNumFET>91700</SerialNumFET>
+    <SerialNumREF>not_set</SerialNumREF>
+    <CalDate>25-Oct-2022</CalDate>
+    <F1>0.000000e+00</F1>
+    <F2>0.000000e+00</F2>
+    <F3>0.000000e+00</F3>
+    <F4>0.000000e+00</F4>
+    <F5>0.000000e+00</F5>
+    <F6>0.000000e+00</F6>
+    <K0>-1.351291e+00</K0>
+    <K2>-1.117300e-03</K2>
+  </Calibration>
+  <Calibration format='TEMP1' id='Temperature'>
+    <SerialNum>0002100</SerialNum>
+    <CalDate>12-Mar-23</CalDate>
+    <A0>-1.907535e-04</A0>
+    <A1>3.136138e-04</A1>
+    <A2>-4.494075e-06</A2>
+    <A3>2.027639e-07</A3>
+  </Calibration>
+  <Calibration format='WBCOND0' id='Conductivity'>
+    <SerialNum>0002100</SerialNum>
+    <CalDate>12-Mar-23</CalDate>
+    <G>-1.008414e+00</G>
+    <H>1.412525e-01</H>
+    <I>-1.837782e-05</I>
+    <J>2.129955e-05</J>
+    <PCOR>-9.570000e-08</PCOR>
+    <TCOR>3.250000e-06</TCOR>
+    <WBOTC>5.303705e-07</WBOTC>
+    <Z>0.000000e+00</Z>
+  </Calibration>
+  <Calibration format='STRAIN0' id='Pressure'>
+    <SerialNum>12430753</SerialNum>
+    <CalDate>14-Mar-23</CalDate>
+    <PA0>4.125940e-02</PA0>
+    <PA1>1.340937e-04</PA1>
+    <PA2>-5.523956e-13</PA2>
+    <PTCA0>5.250235e+05</PTCA0>
+    <PTCA1>7.395787e+00</PTCA1>
+    <PTCA2>2.846670e-01</PTCA2>
+    <PTCB0>2.508248e+01</PTCB0>
+    <PTCB1>-1.303258e-03</PTCB1>
+    <PTCB2>0.000000e+00</PTCB2>
+    <PTEMPA0>-8.395917e+01</PTEMPA0>
+    <PTEMPA1>4.726277e-02</PTEMPA1>
+    <PTEMPA2>-9.372689e-08</PTEMPA2>
+    <POFFSET>0.000000e+00</POFFSET>
+    <PRANGE>4.400000e+01</PRANGE>
+  </Calibration>
+  <Calibration format='OXYGEN1' id='Oxygen'>
+    <SerialNum>3441</SerialNum>
+    <CalDate>10-Mar-23</CalDate>
+    <TAU20>5.500000e+00</TAU20>
+    <OXA0>1.051300e+00</OXA0>
+    <OXA1>-1.500000e-03</OXA1>
+    <OXA2>4.376810e-01</OXA2>
+    <OXB0>-2.543290e-01</OXB0>
+    <OXB1>1.671680e+00</OXB1>
+    <OXC0>1.039410e-01</OXC0>
+    <OXC1>4.436990e-03</OXC1>
+    <OXC2>6.134090e-05</OXC2>
+    <OXTA0>7.441449e-04</OXTA0>
+    <OXTA1>2.399270e-04</OXTA1>
+    <OXTA2>1.777810e-06</OXTA2>
+    <OXTA3>6.239731e-08</OXTA3>
+    <OXE>1.100000e-02</OXE>
+  </Calibration>
+</CalibrationCoefficients>
+<Executed/>
+getcd  ec
+<EventCounters DeviceType='Deep SeapHox2' SerialNumber='0002100'>
+  <EventSummary numEvents='255'/>
+  <Event type='Event53' count='255'/>
+</EventCounters>
+<Executed/>
+getd hd
+<HardwareData DeviceType='Deep SeapHox2' SerialNumber='0002100'>
+  <Manufacturer>Sea-Bird Scientific</Manufacturer>
+  <FirmwareVersion build='30014'>6.1.4</FirmwareVersion>
+  <FirmwareDate>Jun 08 2018, 10:10:57</FirmwareDate>
+  <CommandSetVersion>1.0</CommandSetVersion>
+  <PCBAssembly PCBSerialNum='252310' AssemblyNum='42017.0D'/>
+  <PCBAssembly PCBSerialNum='252954' AssemblyNum='42018.1E'/>
+  <PCBAssembly PCBSerialNum='252954' AssemblyNum='42018.1E'/>
+  <PCBAssembly PCBSerialNum='not_set' AssemblyNum='not_set'/>
+  <MfgDate>11 Nov 2021</MfgDate>
+  <FirmwareLoader>Loader_PD007_v1.0.1</FirmwareLoader>
+  <InternalSensors>
+    <Sensor id='pH'>
+      <type>pH-2</type>
+      <SerialNumber desc='reference' value='not_set'/>
+      <SerialNumber desc='isFET' value='91700'/>
+    </Sensor>
+    <Sensor id='Humidity'>
+      <type>rh-1</type>
+    </Sensor>
+  </InternalSensors>
+  <ExternalSensors>
+    <Sensor id='Temperature'>
+      <type>temperature-1</type>
+      <SerialNumber>25627</SerialNumber>
+    </Sensor>
+    <Sensor id='Conductivity'>
+      <type>conductivity-1</type>
+      <SerialNumber>25627</SerialNumber>
+    </Sensor>
+    <Sensor id='Pressure'>
+      <type>strain-0</type>
+      <SerialNumber>12430753</SerialNumber>
+    </Sensor>
+    <Sensor id='Oxygen'>
+      <type>oxygen-1</type>
+      <SerialNumber>3441</SerialNumber>
+      <FirmwareVersion>3.2.2</FirmwareVersion>
+    </Sensor>
+  </ExternalSensors>
+</HardwareData>
+<Executed/>
+ds
+[InstrumentInfo]
+  DeviceType      = Deep SeapHox2
+  SerialNumber    = 0002100
+  FirmwareVersion = 6.1.4 b30014
+  FirmwareDate    = Jun 08 2018, 10:10:57
+  FrameSync       = DSPHOX
+[Status]
+  DateTime        = 19 Apr 2024 23:09:15
+  AutoSampling    = Not logging, stop command
+  EventsCount     = 255
+  PowerSrc        = External
+  SystemVolts     = 15.54V
+  BatteryVolts    = 12.22V
+  IsoBattery      = 5.86V
+  RTCBattery      = 3.15V
+  [Status.Memory]
+  SamplesStored   = 1490
+  SamplesFree     = 881521
+  SampleLength    = 38
+  BytesUsed       = 56620
+[Config]
+  SampleInterval  = 60
+  PumpOnTime      = 38.0
+  TxRealTime      = yes
+  CTDPower        = no
+  [Config.Measurands]
+  Format          = raw decimal
+  pH              = pH
+  Temperature     = Celsius
+  Conductivity    = S/m
+  Salinity        = PSU
+  Pressure        = Decibar
+  Oxygen          = ml/L
+<Executed/>
+dc
+[InstrumentInfo]
+  DeviceType      = Deep SeapHox2
+  SerialNumber    = 0002100
+  FirmwareVersion = 6.1.4 b30014
+[pH]
+  Type          = ISFET
+  SerialNumber  = 91700
+  RefSerialNum  = not_set
+  Caldate       = 25-Oct-2022
+  F1            = 0.000000e+00
+  F2            = 0.000000e+00
+  F3            = 0.000000e+00
+  F4            = 0.000000e+00
+  F5            = 0.000000e+00
+  F6            = 0.000000e+00
+  K0            = -1.351291e+00
+  K2            = -1.117300e-03
+[Temperature]
+  Caldate       = 12-Mar-23
+  TA0           = -1.907535e-04
+  TA1           = 3.136138e-04
+  TA2           = -4.494075e-06
+  TA3           = 2.027639e-07
+[Conductivity]
+  Caldate       = 12-Mar-23
+  G             = -1.008414e+00
+  H             = 1.412525e-01
+  I             = -1.837782e-05
+  J             = 2.129955e-05
+  CPCOR         = -9.570000e-08
+  CTCOR         = 3.250000e-06
+  WBOTC         = 5.303705e-07
+  Z             = 0.000000e+00
+[Pressure]
+  SerialNumber  = 12430753
+  Range         = 44 psia
+  Caldate       = 14-Mar-23
+  PA0           = 4.125940e-02
+  PA1           = 1.340937e-04
+  PA2           = -5.523956e-13
+  PTCA0         = 5.250235e+05
+  PTCA1         = 7.395787e+00
+  PTCA2         = 2.846670e-01
+  PTCB0         = 2.508248e+01
+  PTCB1         = -1.303258e-03
+  PTCB2         = 0.000000e+00
+  PTEMPA0       = -8.395917e+01
+  PTEMPA1       = 4.726277e-02
+  PTEMPA2       = -9.372689e-08
+  POFFSET       = 0.000000e+00
+[Oxygen]
+  SerialNumber  = 3441
+  Caldate       = 10-Mar-23
+  TAU_20        = 5.500000e+00
+  OXA0          = 1.051300e+00
+  OXA1          = -1.500000e-03
+  OXA2          = 4.376810e-01
+  OXB0          = -2.543290e-01
+  OXB1          = 1.671680e+00
+  OXC0          = 1.039410e-01
+  OXC1          = 4.436990e-03
+  OXC2          = 6.134090e-05
+  OXTA0         = 7.441449e-04
+  OXTA1         = 2.399270e-04
+  OXTA2         = 1.777810e-06
+  OXTA3         = 6.239731e-08
+  OXE           = 1.100000e-02
+<Executed/>
+ts
+DSPHOX02100,2024-04-19T22:03:29, 0000,  250570, 5042046, 6024587, 8382467, 8385454,  633915,  2224, 2671.168, 17.043, 0.625031, 25304, 13440
