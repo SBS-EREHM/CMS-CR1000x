@@ -1,0 +1,201 @@
+getcd
+<ConfigurationData DeviceType='Shallow SeapHox2' SerialNumber='0002106'>
+  <UseCTDPower>no</UseCTDPower>
+  <TxRealTime>yes</TxRealTime>
+  <SampleInterval>60</SampleInterval>
+  <SampleDataFormat>converted engineering</SampleDataFormat>
+  <FrameSync>SSPHOX</FrameSync>
+  <TemperatureUnits>Celsius</TemperatureUnits>
+  <ConductivityUnits>S/m</ConductivityUnits>
+  <PressureUnits>Decibar</PressureUnits>
+  <OxygenUnits>mg/L</OxygenUnits>
+  <PumpOnTime>38.0</PumpOnTime>
+</ConfigurationData>
+<Executed/>
+getsd
+<StatusData DeviceType='Shallow SeapHox2' SerialNumber='0002106'>
+  <DateTime>2024-04-19T09:54:00</DateTime>
+  <EventSummary numEvents='255'/>
+  <Power>
+    <vSystem src='External'>15.4</vSystem>
+    <vBatt>12.34</vBatt>
+    <vIso>5.92</vIso>
+    <vRTCBackup>3.18</vRTCBackup>
+  </Power>
+  <MemorySummary>
+    <Bytes>264</Bytes>
+    <Samples>6</Samples>
+    <SamplesFree>762594</SamplesFree>
+    <SampleLength>44</SampleLength>
+  </MemorySummary>
+  <AutonomousSampling>no, initialized</AutonomousSampling>
+</StatusData>
+<Executed/>
+getcc
+<CalibrationCoefficients DeviceType='Shallow SeapHox2' SerialNumber='0002106'>
+  <Calibration format='PH1' id='pH'>
+    <SerialNumFET>95337</SerialNumFET>
+    <SerialNumREF>not_set</SerialNumREF>
+    <CalDate>1-jun-2023</CalDate>
+    <K0>-1.337464e+00</K0>
+    <K2>-1.121357e-03</K2>
+    <KDF0>-1.348652e+00</KDF0>
+    <KDF2>-1.261265e-03</KDF2>
+  </Calibration>
+  <Calibration format='TEMP2' id='Temperature'>
+    <SerialNum>95337</SerialNum>
+    <CalDate>1-jun-2023</CalDate>
+    <TDFA0>-1.542604e-03</TDFA0>
+    <TDFA1>5.451845e-04</TDFA1>
+    <TDFA2>-1.988318e-05</TDFA2>
+    <TDFA3>4.501564e-07</TDFA3>
+  </Calibration>
+  <Calibration format='TEMP1' id='Temperature'>
+    <SerialNum>0002106</SerialNum>
+    <CalDate>02-Aug-23</CalDate>
+    <A0>-1.159667e-04</A0>
+    <A1>3.053904e-04</A1>
+    <A2>-4.096185e-06</A2>
+    <A3>1.891290e-07</A3>
+  </Calibration>
+  <Calibration format='WBCOND0' id='Conductivity'>
+    <SerialNum>0002106</SerialNum>
+    <CalDate>02-Aug-23</CalDate>
+    <G>-1.004491e+00</G>
+    <H>1.408780e-01</H>
+    <I>-6.535990e-05</I>
+    <J>2.547584e-05</J>
+    <PCOR>-9.570000e-08</PCOR>
+    <TCOR>3.250000e-06</TCOR>
+    <WBOTC>2.496654e-07</WBOTC>
+    <Z>0.000000e+00</Z>
+  </Calibration>
+  <Calibration format='STRAIN0' id='Pressure'>
+    <SerialNum>12069369</SerialNum>
+    <CalDate>31-Jul-23</CalDate>
+    <PA0>4.036605e-02</PA0>
+    <PA1>1.340530e-04</PA1>
+    <PA2>-3.116251e-13</PA2>
+    <PTCA0>5.253211e+05</PTCA0>
+    <PTCA1>1.862908e+01</PTCA1>
+    <PTCA2>-2.466663e-01</PTCA2>
+    <PTCB0>2.515575e+01</PTCB0>
+    <PTCB1>1.350000e-03</PTCB1>
+    <PTCB2>0.000000e+00</PTCB2>
+    <PTEMPA0>-7.377976e+01</PTEMPA0>
+    <PTEMPA1>5.198852e-02</PTEMPA1>
+    <PTEMPA2>-4.843517e-07</PTEMPA2>
+    <POFFSET>0.000000e+00</POFFSET>
+    <PRANGE>4.400000e+01</PRANGE>
+  </Calibration>
+  <Calibration format='OXYGEN1' id='Oxygen'>
+    <SerialNum>3440</SerialNum>
+    <CalDate>31-Aug-23</CalDate>
+    <TAU20>4.000000e+00</TAU20>
+    <OXA0>1.051300e+00</OXA0>
+    <OXA1>-1.500000e-03</OXA1>
+    <OXA2>3.777990e-01</OXA2>
+    <OXB0>-2.460560e-01</OXB0>
+    <OXB1>1.606940e+00</OXB1>
+    <OXC0>1.063030e-01</OXC0>
+    <OXC1>4.551850e-03</OXC1>
+    <OXC2>6.480480e-05</OXC2>
+    <OXTA0>7.158430e-04</OXTA0>
+    <OXTA1>2.479690e-04</OXTA1>
+    <OXTA2>9.904570e-07</OXTA2>
+    <OXTA3>8.842230e-08</OXTA3>
+    <OXE>1.100000e-02</OXE>
+  </Calibration>
+</CalibrationCoefficients>
+<Executed/>
+getec
+<EventCounters DeviceType='Shallow SeapHox2' SerialNumber='0002106'>
+  <EventSummary numEvents='255'/>
+  <Event type='Event53' count='255'/>
+</EventCounters>
+<Executed/>
+fwr
+<Error type='INVALID COMMAND' msg='Cmd not recognized'/>
+<Executed/>
+gethd
+<HardwareData DeviceType='Shallow SeapHox2' SerialNumber='0002106'>
+  <Manufacturer>Sea-Bird Scientific</Manufacturer>
+  <FirmwareVersion build='30014'>6.1.4</FirmwareVersion>
+  <FirmwareDate>Jun 08 2018, 10:10:57</FirmwareDate>
+  <CommandSetVersion>1.0</CommandSetVersion>
+  <PCBAssembly PCBSerialNum='255158' AssemblyNum='42017.0D'/>
+  <PCBAssembly PCBSerialNum='271274' AssemblyNum='42018.1E'/>
+  <PCBAssembly PCBSerialNum='271288' AssemblyNum='42019.0B'/>
+  <PCBAssembly PCBSerialNum='not_set' AssemblyNum='not_set'/>
+  <MfgDate>23 Jan 2023</MfgDate>
+  <FirmwareLoader>Loader_PD007_v1.0.1</FirmwareLoader>
+  <InternalSensors>
+    <Sensor id='pH'>
+      <type>pH-1</type>
+      <SerialNumber desc='reference' value='not_set'/>
+      <SerialNumber desc='isFET' value='95337'/>
+      <Sensor id='Temperature'>
+        <type>temperature-2</type>
+        <SerialNumber>95337</SerialNumber>
+      </Sensor>
+    </Sensor>
+    <Sensor id='Humidity'>
+      <type>rh-1</type>
+    </Sensor>
+  </InternalSensors>
+  <ExternalSensors>
+    <Sensor id='Temperature'>
+      <type>temperature-1</type>
+      <SerialNumber>25628</SerialNumber>
+    </Sensor>
+    <Sensor id='Conductivity'>
+      <type>conductivity-1</type>
+      <SerialNumber>25628</SerialNumber>
+    </Sensor>
+    <Sensor id='Pressure'>
+      <type>strain-0</type>
+      <SerialNumber>12069369</SerialNumber>
+    </Sensor>
+    <Sensor id='Oxygen'>
+      <type>oxygen-1</type>
+      <SerialNumber>3440</SerialNumber>
+      <FirmwareVersion>3.2.2</FirmwareVersion>
+    </Sensor>
+  </ExternalSensors>
+</HardwareData>
+<Executed/>
+ds
+[InstrumentInfo]
+  DeviceType      = Shallow SeapHox2
+  SerialNumber    = 0002106
+  FirmwareVersion = 6.1.4 b30014
+  FirmwareDate    = Jun 08 2018, 10:10:57
+  FrameSync       = SSPHOX
+[Status]
+  DateTime        = 19 Apr 2024 10:03:36
+  AutoSampling    = Not logging, initialized
+  EventsCount     = 255
+  PowerSrc        = External
+  SystemVolts     = 15.50V
+  BatteryVolts    = 12.34V
+  IsoBattery      = 5.92V
+  RTCBattery      = 3.18V
+  [Status.Memory]
+  SamplesStored   = 6
+  SamplesFree     = 762594
+  SampleLength    = 44
+  BytesUsed       = 264
+[Config]
+  SampleInterval  = 60
+  PumpOnTime      = 38.0
+  TxRealTime      = yes
+  CTDPower        = no
+  [Config.Measurands]
+  Format          = converted engineering
+  pH              = pH
+  Temperature     = Celsius
+  Conductivity    = S/m
+  Salinity        = PSU
+  Pressure        = Decibar
+  Oxygen          = mg/L
+<Executed/>
