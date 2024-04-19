@@ -88,20 +88,24 @@ class cr1000x:
 def main() :
 
     # Static ip of CR1000x
-    logger_ip = "192.168.50.91"
+    # logger_ip = "192.168.50.91"
+    logger_ip = "10.96.211.159"
 
     # Which table to retrieve
-    table_name = "EcoTriplet"
+    # table_name = "EcoTriplet"
+    table_name = "SeapHOx"
 
-   
+    # Which sensor to view
+    # sensor_name = "ECO_Beta700"
+    sensor_name = "SPHOX_T"
 
     # Create datalogger object
     datalogger = cr1000x(logger_ip)
 
     # Retrieve using default mode='Backfill', p1=300 sec
-    data = datalogger.fetch(table_name)
+    data = datalogger.fetch(table_name, p1=5000)
 
-    # Select desired mode and relate arguments p1, p2
+    # Select desired mode and relate argume, nts p1, p2
     # mode = 'most-recent'
     # p1 = 30      # Most recent 30 records
     # p2 = None 
@@ -121,10 +125,10 @@ def main() :
         df = datalogger.to_dataframe(data)
 
         # Display DataFrame
-        print(df.head)
+        print(df.head())
 
         # plot one variable vs. time
-        datalogger.plot(df, 'ECO_Beta700')
+        datalogger.plot(df, sensor_name)
 
 # Example usage
 if __name__ == "__main__":
