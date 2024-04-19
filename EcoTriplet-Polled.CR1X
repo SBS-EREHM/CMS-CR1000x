@@ -58,9 +58,9 @@ Sub ECOProcess(Rstring As String * 100)
   
   'Get counts for each measurement by spliting string at tabs CHR(09)
   SplitStr (SplitStrs(1),Rstring,CHR(09),9,5)
-  ECO_Chl470=SplitStrs(4)     'xx38, where xx are additional digits
-  ECO_Beta700=SplitStrs(6)    'xx49
-  ECO_FDOM=SplitStrs(8)       'xx41
+  ECO_Chl470=SplitStrs(7)     'xx38, where xx are additional digits
+  ECO_Beta700=SplitStrs(5)    'xx49
+  ECO_FDOM=SplitStrs(9)       'xx41
 EndSub
 
 'Main Program
