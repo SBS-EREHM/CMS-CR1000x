@@ -1,0 +1,392 @@
+'CR1000X Series Datalogger
+'The datalogger type listed on line 1 determines the default instruction set,
+'compiler, and help files used for a program that uses the .DLD or .CRB program
+'extension. These options can also be set using the Set Datalogger Type dialog box
+'(CRBasic Editor|Tools|Set Datalogger Type).
+
+'For programming tips, copy this address to your browser
+'search window:https://www.campbellsci.com/videos/datalogger-programming
+
+'Date: 2024-04-09
+'Program author: Eric Rehm, Sea-Bird Scientific, erehm@seabird.com
+'
+' SUNA : comma-delimited string of > 1100 bytes plus <cr><lf>
+' ECO: 44 bytes/line * ECO 1 line/s * CR1000x 1 s/scan = 44 bytes received/scan
+' SeapHOx: comma-delimited string of > 100 char bytes plus <cr><lf>
+
+'Declare Constants
+Const PortSeapHOx = ComC7
+Const PortSUNA = ComC5
+Const PortEco = ComC3
+Const PortExo = C1    'SDI-12
+
+Const SeapHOxSampleCommand = "ts"  ' "tpss" for deployment (pump and save)
+
+Const SeapHOxSamplePeriodMin = 2  'minute  5 min for deployment
+Const SUNASamplePeriodMin = 1     'minutes  15 minutes for deployment
+Const EcoSamplePeriodSec = 60     'seconds  60 sec for deployment
+Const ExoSamplePeriodSec = 75     'seconds  900 sec for deployment
+'Const TableFileInterval = 24
+'Const TableFileUnits = "Hr"
+Const TableFileInterval = 1
+Const TableFileUnits = Hr
+
+
+'Declare Public Variables
+Public SPHOX_RawString As String * 200
+Public SPHOX_NBytesReturned
+Public SPHOX_LastFileName As String * 32
+Public SUNA_RawString As String * 2500
+Public SUNA_NBytesReturned
+Public SUNA_LastFileName As String * 32
+Public ECO_RawString As String * 100
+Public ECO_NBytesReturned
+Public ECO_LastFileName As String * 32
+Public EXO(16)
+Public EXO_LastFileName As String * 32
+Public CR1X_LastFileName As String * 32
+
+Units ECO_Chl470=counts
+Units ECO_Beta700=counts
+Units ECO_FDOM=counts
+
+Public PTemp_C, Temp_C, BattV
+Units BattV=Volts
+Units PTemp_C=Deg C
+Units Temp_C=Deg C
+
+'Define Aliases
+Alias EXO(1) = EXO_Date
+Alias EXO(2) = EXO_Time
+Alias EXO(3) = EXO_T
+Alias EXO(4) = EXO_CmScm
+Alias EXO(5) = EXO_S
+Alias EXO(6) = EXO_pH
+Alias EXO(7) = EXO_P
+Alias EXO(8) = EXO_z
+Alias EXO(9) = EXO_NTU
+Alias EXO(10) = EXO_ChlRFU
+Alias EXO(11) = EXO_Oxysat
+Alias EXO(12) = EXO_OxymgL
+Alias EXO(13) = EXO_PeRFU
+Alias EXO(14) = EXO_FNU
+Alias EXO(15) = EXO_BatV
+Alias EXO(16) = EXO_ExtV
+
+'Declare Private Variables
+'Example:
+'Dim Counter
+
+'Define Data Tables
+'Data tables declare storage on microSD card (CRD:) using CRBasic TableFile()
+'Each data table is stored in CSIJSON format (option 32).  This is the same
+'format returned by HTTP Web Server API JSON format option.
+'A new file is opened every 24 hr, e.g.,CRD:SeapHOx_0.dat, CRD:SeapHOx_1.dat, ....
+DataTable (SeapHOx,1,-1) 'Set table size to # of records, or -1 to autoallocate. 
+    TableFile("CRD:SeapHOx_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, SPHOX_LastFileName)
+    Sample (1,SPHOX_Header,String) 
+    Sample (1,SPHOX_DateTime,String)
+    Sample (1,SPHOX_SampleNum,Long) 
+    Sample (1,SPHOX_ErrorFlags,String
+    Sample (1,SPHOX_T,Float)
+    Sample (1,SPHOX_pHext,Float) 
+    Sample (1,SPHOX_pHint,Float) 
+    Sample (1,SPHOX_VpHext,Float
+    Sample (1,SPHOX_VpHint,Float) 
+    Sample (1,SPHOX_pHtemp,Float
+    Sample (1,SPHOX_P,Float) 
+    Sample (1,SPHOX_S,Float) 
+    Sample (1,SPHOX_C,Float) 
+    Sample (1,SPHOX_Oxy,Float
+    Sample (1,SPHOX_RH,Float) 
+    Sample (1,SPHOX_Tint,Float
+    Sample (1,SPHOX_RawString,String) 
+EndTable
+
+DataTable (SUNA,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+   TableFile("CRD:SUNA_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, SUNA_LastFileName)
+   Sample (1,SUNA_Header,String)
+   Sample (1,SUNA_Date,Long)   
+   Sample (1,SUNA_Time,Float)
+   Sample (1,SUNA_NO3,Float)
+   Sample (1,SUNA_Nitrogen,Float)
+   Sample (1,SUNA_A254,Float)
+   Sample (1,SUNA_A350,Float)
+   Sample (1,SUNA_BrTrace,Float)
+   Sample (1,SUNA_SpecAvg,Long)
+   Sample (1,SUNA_Dark,Long)
+   Sample (1,SUNA_IntTime,Long)
+   Sample (1,SUNA_TempInt,Float)
+   Sample (1,SUNA_TempSpec,Float)
+   Sample (1,SUNA_TempLamp,Float)
+   Sample (1,SUNA_LampOnTime,Long)
+   Sample (1,SUNA_RH,Float)
+   Sample (1,SUNA_Vmain,Float)
+   Sample (1,SUNA_Vlamp,Float)
+   Sample (1,SUNA_Vint,Float)
+   Sample (1,SUNA_Imain,Long)
+   Sample (1,SUNA_FitRMSE,Long)     
+   Sample (1,SUNA_RawString,String) 
+EndTable
+
+DataTable (EcoTriplet,True,-1) 'Set table size to # of records, or -1 to autoallocate.
+   TableFile("CRD:EcoTriplet_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, ECO_LastFileName)
+   Sample (1,ECO_Header,String)
+   Sample (1,ECO_Chl470,Long)
+   Sample (1,ECO_Beta700,Long)   
+   Sample (1,ECO_FDOM,Long)
+   Sample (1,ECO_RawString,String) 
+EndTable
+
+DataTable (EXOData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
+' date   time   temp   Cms/cm psal pH  psig depthm NTU chlr O2%sat O2mgL PEr FNU  BattV ExtV
+' psig is coverted to pressure YSI_P in dbar during parsing.
+  TableFile("CRD:EXOData_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, EXO_LastFileName)
+	Sample(1,EXO(1),Float)
+	Sample(1,EXO(2),Float)
+	Sample(1,EXO(3),Float)
+	Sample(1,EXO(4),Float)
+	Sample(1,EXO(5),Float)
+	Sample(1,EXO(6),Float)
+	Sample(1,EXO(7),Float)
+	Sample(1,EXO(8),Float)
+	Sample(1,EXO(9),Float)
+	Sample(1,EXO(10),Float)
+	Sample(1,EXO(11),Float)
+	Sample(1,EXO(12),Float)
+	Sample(1,EXO(13),Float)
+	Sample(1,EXO(14),Float)
+	Sample(1,EXO(15),Float)
+	Sample(1,EXO(16),Float)
+EndTable	
+
+DataTable(CR1X,True,-1)
+  TableFile("CRD:CR1X_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, CR1X_LastFileName)
+  DataInterval(0,30,Sec,0)
+	Sample(1,BattV,FP2)
+	Sample(1,PTemp_C,FP2)
+	Sample(1,Temp_C,FP2)
+EndTable
+
+'Define Subroutines
+Sub SeapHOxProcess(Rstring As String * 200)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store SPHOX_RawString anyway.
+  '
+  'outputformat=1 (engineering values)
+  'Each SeapHOx record is a comma-delimited string of > 100 char bytes plus <cr><lf>:
+  '  
+  'FrameSync, DateTime(UTC+00:00), Sample Number(#), Error Flags(#),
+  'Temperature(Celsius), External pH(pH), Internal pH(pH), 
+  'External pH(Volt), Internal pH(Volt), pH Temperature(Celsius),
+  'Pressure(Decibar), Salinity(psu), Conductivity(S/m), Oxygen(ml/L),
+  'Relative Humidity(%), INT Temperature(Celsius)
+  '  
+  '<lf>SSPHOX02106,2023-10-11T13:17:19, -1, 0000, 
+  '19.9791,3.0148,6.2442,
+  '-0.962310,-1.010671, 18.7646,   
+  '-0.219,   0.0100,  0.00002,  8.894,  
+  '3.4,20.3<cr>
+
+  Public SPHOX_Header As String, SPHOX_DateTime As String
+  Public SPHOX_SampleNum As Long, SPHOX_ErrorFlags As String
+  Public SPHOX_pHext As Float, SPHOX_pHint As Float, SPHOX_VpHext As Float
+  Public SPHOX_VpHint As Float, SPHOX_pHtemp As Float
+  Public SPHOX_T As Float, SPHOX_P As Float, SPHOX_C As Float, 
+  Public SPHOX_S As Float, SPHOX_Oxy As Float
+  Public SPHOX_RH As Float, SPHOX_Tint As Float
+  
+  Dim SplitStrs(16) As String * 32
+  
+  SplitStr (SplitStrs(1),RString,",",16,5)
+  SPHOX_Header=SplitStrs(1)     'SSPHO02106 (example, s/n may vary)
+  SPHOX_DateTime=SplitStrs(2)   '2023-10-11T13:17:19
+  SPHOX_SampleNum=SplitStrs(3)
+  SPHOX_ErrorFlags=SplitStrs(4)
+  SPHOX_T=SplitStrs(5)
+  SPHOX_pHext=SplitStrs(6)
+  SPHOX_pHint=SplitStrs(7)
+  SPHOX_VpHext=SplitStrs(8)
+  SPHOX_VpHint=SplitStrs(9)
+  SPHOX_pHtemp=SplitStrs(10)
+  SPHOX_P=SplitStrs(11)
+  SPHOX_S=SplitStrs(12)
+  SPHOX_C=SplitStrs(13)
+  SPHOX_Oxy=SplitStrs(14)
+  SPHOX_RH=SplitStrs(15)
+  SPHOX_Tint=SplitStrs(16)
+EndSub 
+
+Sub SUNAProcess(Rstring As String * 2500)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store SUNA_RawString anyway.
+
+  'Each SUNA record is a comma-delimited string of > 1000 char bytes plus <cr><lf>:
+  '<lf>SATSLF2094,2023281,3.150066,-7.49,-0.1049,0.0196,0.0330,0.00,18837,852,1,
+  '853,856, ... 4768,4417,  (128 integer spectral values)
+  '26.6,25.3,26.8,153016,0.0,14.3,12.0,5.0,464,29.95,-46.39,4.6651,
+  '-1.159033,0.000249,,,,,248<cr>
+
+  Public SUNA_Header As String
+  Public SUNA_Date As Long, SUNA_Time As Float
+  Public SUNA_NO3 As Float, SUNA_Nitrogen As Float
+  Public SUNA_A254 As Float, SUNA_A350 As Float, SUNA_BrTrace As Float
+  Public SUNA_SpecAvg As Long, SUNA_Dark As Long, SUNA_IntTime As Long
+  Public SUNA_TempInt As Float, SUNA_TempSpec As Float
+  Public SUNA_TempLamp As Float, SUNA_LampOnTime As Long
+  Public SUNA_RH As Float, SUNA_Vmain As Float, SUNA_Vlamp As Float, 
+  Public SUNA_Vint As Float, SUNA_Imain As Float
+  Public SUNA_FitRMSE As Float
+
+  Dim SplitStrs(286) As String * 32
+  
+  SplitStr (SplitStrs(1),Rstring,",",286,5)
+  SUNA_Header=SplitStrs(1)     'SATSLF2094
+  SUNA_Date=SplitStrs(2)      '2023282 : day 282 in 2023
+  SUNA_Time=SplitStrs(3)      '3.150066 (UTC)s
+  SUNA_NO3=SplitStrs(4)       '-7.49
+  SUNA_Nitrogen=SplitStrs(5)  '-0.1049
+  SUNA_A254=SplitStrs(6)
+  SUNA_A350=SplitStrs(7)
+  SUNA_BrTrace=SplitStrs(8)
+  SUNA_SpecAvg=SplitStrs(9)
+  SUNA_Dark=SplitStrs(10)
+  SUNA_IntTime=SplitStrs(11)
+  'Skip spectra : SplitStrs(12:267) (Available in SUNA_RawString)
+  SUNA_TempInt=SplitStrs(268)
+  SUNA_TempSpec=SplitStrs(269)
+  SUNA_TempLamp=SplitStrs(270)
+  SUNA_LampOnTime=SplitStrs(271)
+  SUNA_RH=SplitStrs(272)
+  SUNA_Vmain=SplitStrs(273)
+  SUNA_Vlamp=SplitStrs(274)
+  SUNA_Vint=SplitStrs(275)
+  SUNA_Imain=SplitStrs(276)
+  SUNA_FitRMSE=SplitStrs(281)    
+EndSub
+
+Sub ECOProcess(Rstring As String * 100)
+  
+  'Parse the raw string (RString) into individual variables.  
+  'But store ECO_RawString anyway.
+
+  'Each Eco record is a tab-delimited string of 42-48 bytes plus <cr><lf>:
+  '<lf>BBFL2W-8027 99/99/99	99:99:99	700	xx38	695	xx49	460	xx41	530<cr>
+
+  Public ECO_Header As String
+  Public ECO_Chl470 As Long
+  Public ECO_Beta700 As Long
+  Public ECO_FDOM As Long
+  
+  Dim SplitStrs(9) As String * 32
+  
+  'Get counts for each measurement by spliting string at tabs CHR(09)
+  SplitStr (SplitStrs(1),Rstring,CHR(09),9,5)
+  ECO_Header=SplitStrs(1)
+  ECO_Chl470=SplitStrs(7)     'xx38, where xx are additional digits
+  ECO_Beta700=SplitStrs(5)    'xx49
+  ECO_FDOM=SplitStrs(9)       'xx41
+EndSub
+
+
+'Main Program
+BeginProg
+  SerialOpen (PortSeapHOx,115200,0,0,250,0)
+  SerialOpen (PortSUNA,57600,0,0,2500,0)
+  SerialOpen (PortEco,19200,0,0,200)
+
+  Scan (1,Sec,3,0)
+    
+    'Synchronize CR1000x time every minute (hour, day?) with NTP server
+    'us.pool.ntp.org within 1000 ms.
+    If IfTime(0,1,min) Then
+      NetworkTimeProtocol("us.pool.ntp.org", 0, 1000)
+    EndIf
+    
+    'CR1000x battery voltage, panel temperature, Type T thermocouple temp
+		Battery (BattV)
+		PanelTemp (PTemp_C,15000)
+		TCDiff(Temp_C,1,mv200C,1,TypeT,PTemp_C,True,0,15000,1,0)
+
+   'Read in the SeapHOX record, a comma-delimited string of > 1
+   'Wanted data followed by <Executed/>, so tell SerialInRecord to record 
+   'oldest record in serial buffer (Option = 10)
+    SerialInRecord (PortSeapHOx,SPHOX_RawString,&h0A,0,&h0D,SPHOX_NBytesReturned,10) 
+
+    'Read in the ECO record, a comma-delimited string of >= 42 bytes plus <cr><lf>
+    SerialInRecord (PortEco,ECO_RawString,&h0A,0,&h0D,ECO_NBytesReturned,01)       
+
+    'Read in the SUNA record, a comma-delimited string of > 1100 bytes plus <cr><lf>
+    SerialInRecord (PortSUNA,SUNA_RawString,&h0A,0,&h0D,SUNA_NBytesReturned,01) 
+
+    'Just after SeapHOx output, another short line <Executed/> is output: skip it.
+    If SPHOX_NBytesReturned > 100 Then
+      'Parse Raw string and Update SeapHOx table
+      Call SeapHOxProcess(SPHOX_RawString)
+      CallTable SeapHOx
+    EndIf
+    
+    If ECO_NBytesReturned >= 42 Then
+      'Parse raw string if at least 41 char and update table
+      Call ECOProcess(ECO_RawString)
+      CallTable EcoTriplet
+    EndIf
+
+    If SUNA_NBytesReturned > 200 Then
+      'Parse raw string and update SUNA table  (Only if NBytesReturned > 200)
+      Call SUNAProcess(SUNA_RawString)
+      CallTable SUNA
+    EndIf
+    
+    'Store CR1000x temp and voltage
+		CallTable CR1X 
+  NextScan
+  
+  'Slower (or faster) scan looops go here.  Four SlowSequence / Scan() loops max
+  'Slow scan loop 1 : 5 minutes (for SeapHOx)
+  SlowSequence
+    Scan (SeapHOxSamplePeriodMin,Min,0,0)
+      '1. Wake up SeapHOx with a <cr>.  Wait 3 sec for <Executed/> tag.
+      '2. Send command To SeapHOx for one Sample with pump "tps" OR "tpss"
+      '   (The extra "s" stores data internally.)
+      'For testing, use 'ts' or 'tss' (no pump).  
+       SerialOut(PortSeapHOx, CHR(13), "<Executed/>"&CHR(13)&CHR(10), 1, 300)
+       SerialOut(PortSeapHOx, SeapHOxSampleCommand&CHR(13), "", 1, 50)
+    NextScan
+  EndSequence
+  
+  'Slow scan loop 2 : 15 minutes (for SUNA)
+  SlowSequence
+    Scan (SUNASamplePeriodMin,Min,0,0)
+      '1. Wake up SUNA with <cr>.  Wait for "CMD?" prompt.
+      '2. Send "measure N" command to SUNA to output 1 dark frame + N light frames 
+      'Note: SUNA must be condfigured in Polled mode.
+       SerialOut(PortSUNA, CHR(13), "CMD?", 1, 300)
+       SerialOut(PortSUNA, "measure 2"&CHR(13), "", 1, 50)
+    NextScan
+  EndSequence
+
+  'Slow scan loop 3 : 300 sec (for ECO)
+    SlowSequence
+    Scan (EcoSamplePeriodSec,Sec,0,0)
+      'Send command to ECO to output 1 set of 5 samples at 1 Hz every XX s: 
+      'ECO must be configured as: "$pkt 6", "$set 1", autorun=0
+      'and "$ave N", where N results in ~1 Hz data (Typically N = 11)
+      'Notice that $pkt 6" is one greater than the desired number of burst 
+      'samples (5) - for some reason, first record is dropped by SerialInRecord()
+      SerialOut(PortEco, "$run"&CHR(13), "mvs 1"&CHR(13)&CHR(10), 1, 50)
+    NextScan
+  EndSequence  
+    
+  'Slow scan loop 4 : 900 s (for YSI EXO 2)
+  SlowSequence
+    Scan (ExoSamplePeriodSec,Sec,0,0)
+      'Send SDI command '0C!' to EXO, wait for result, store in EXO() array
+      SDI12Recorder(EXO(),PortExo,"0","C!",1,0) 
+      CallTable EXOData
+    NextScan
+  EndSequence
+  
+EndProg
