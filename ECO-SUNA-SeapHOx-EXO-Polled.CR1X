@@ -355,7 +355,7 @@ BeginProg
       'Send command to ECO to output 1 set of 10 samples at 1 Hz ever 20 s: 
       'ECO must be configured as: "$pkt 10", "$set 1",
       'and "$ave N", where N results in ~1 Hz data (Typically N = 11)
-      SerialOut(PortEco, CHR(13)&"$run"&CHR(13), "", 1, 10)
+      SerialOut(PortEco, CHR(13)&"$run"&CHR(13), "mvs 1"&CHR(13)&CHR(10), 1, 10)
     NextScan
   EndSequence  
     
