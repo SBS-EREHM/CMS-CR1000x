@@ -14,7 +14,7 @@ $10 14     // internal thermistor counts
 $11 255    // printf \n  (new-line terminated output)
 $99        // end modify output sequence
 $osd       // display output sequence
-$pkt 5     // burst five samples
+$pkt 6     // burst six samples: the CRBasic routine drops one, so this established a stored 5-sample burst
 $set 1     // burst one set of $pkt=N samples then go to command mode
 $man 0     // Do not manually start sampling at a future time
 $rec 1     // Record samples in memory
