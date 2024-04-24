@@ -1,6 +1,8 @@
+import json
 import pandas as pd
 import requests
 import plotly.express as px
+from pathlib import Path
 from dataclasses import dataclass
 
 @dataclass
@@ -82,28 +84,45 @@ class cr1000x:
                 print("Error fetching data. Status code:", response.status_code)
                 return None
         except Exception as e:
-            print("Error:", e)
+            print(f"Unable to fetch data from logger {self.logger_ip}:", e)
             return None
+
+    def read_CSIJSON(self, file_path :str) -> dict:
+        """ Read data from CSIJSON file retrieved from a Campbell CR1000x logger.
+
+            The JSON schema for this file is the same as JSON retrieve from the
+            logger via the HTTP API using the fetch() method above.
+        """
+
+        # Open and load local JSON file
+
+        try :
+            with open(file_path) as json_file :
+                data = json.load(json_file)
+                return data
+        except OSError as e :
+            print(f'Unable to open local JSON file: {e}')
+            # print(f'No such file or directory: {file_name}')
 
 def main() :
 
     # Static ip of CR1000x
-    # logger_ip = "192.168.50.91"
-    logger_ip = "10.96.211.159"
+    logger_ip = "192.168.50.91"
+    # logger_ip = "10.96.211.159"
 
     # Which table to retrieve
-    # table_name = "EcoTriplet"
-    table_name = "SeapHOx"
+    table_name = "EcoTriplet"
+    # table_name = "SeapHOx"
 
     # Which sensor to view
-    # sensor_name = "ECO_Beta700"
-    sensor_name = "SPHOX_T"
+    sensor_name = "ECO_Beta700"
+    # sensor_name = "SPHOX_T"
 
     # Create datalogger object
-    datalogger = cr1000x(logger_ip)
+    datalogger = cr1000x(logger_ip)           
 
-    # Retrieve using default mode='Backfill', p1=300 sec
-    data = datalogger.fetch(table_name, p1=5000)
+    # Example 1: Retrieve using default mode='Backfill', p1=300 sec
+    data = datalogger.fetch(table_name, p1=300)
 
     # Select desired mode and relate argume, nts p1, p2
     # mode = 'most-recent'
@@ -119,16 +138,34 @@ def main() :
 
     # Process data into dataframe, then plot it.
     if data:
-        print("JSON data retrieved successfully")
+        print(f"JSON data retrieved successfull from {logger_ip}")
 
         # extract data to Pandas dataframe
         df = datalogger.to_dataframe(data)
 
         # Display DataFrame
-        print(df.head())
+        print(df.tail())
 
         # plot one variable vs. time
         datalogger.plot(df, sensor_name)
+
+    # Example 2: Read data from a file already retrieved from the logger
+    # Note that the table name is implicit in the file_name
+    # ToDo : method to retrieve file(s) from the logger.
+
+    file_name = Path('/Volumes/[C] Windows 10/Campbellsci/PC400/EcoTriplet_94.dat')
+    data = datalogger.read_CSIJSON(file_name)    
+    if data:
+        print(f"JSON data retrieved successfully from {file_name}")
+
+        # extract data to Pandas dataframe
+        df = datalogger.to_dataframe(data)
+
+        # Display DataFrame
+        print(df.tail())
+
+        # plot one variable vs. time
+        datalogger.plot(df, sensor_name) 
 
 # Example usage
 if __name__ == "__main__":
