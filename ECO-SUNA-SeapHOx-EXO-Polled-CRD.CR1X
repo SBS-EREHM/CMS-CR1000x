@@ -115,8 +115,7 @@ Alias EXO(16) = EXO_ExtV   : Units EXO_ExtV=Volts
 
 'Define Data Tables
 'Data tables declare storage on microSD card (CRD:) using CRBasic TableFile()
-'Each data table is stored in CSIJSON format (option 32).  This is the same
-'format returned by HTTP Web Server API JSON format option.
+'Each data table is stored in TOA5 CSV format (Option 8).
 'A new file is opened every 24 hr, e.g.,CRD:SeapHOx_0.dat, CRD:SeapHOx_1.dat, ....
 DataTable (SeapHOx,1,-1) 'Set table size to # of records, or -1 to autoallocate. 
     TableFile("CRD:SeapHOx_", TableFileOption, -1, 0, TableFileInterval, TableFileUnits, 0, SPHOX_LastFileName)
