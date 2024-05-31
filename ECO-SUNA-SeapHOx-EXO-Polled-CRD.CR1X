@@ -1,4 +1,7 @@
 'CR1000X Series Datalogger
+'
+'ECO-SUNA-SeapHOx-ECO-Polled-CRD.CR1X
+'
 'The datalogger type listed on line 1 determines the default instruction set,
 'compiler, and help files used for a program that uses the .DLD or .CRB program
 'extension. These options can also be set using the Set Datalogger Type dialog box
@@ -20,16 +23,23 @@ Const PortSUNA = ComC5
 Const PortEco = ComC3
 Const PortExo = C1    'SDI-12
 
-Const SeapHOxSampleCommand = "ts"  ' "tpss" for deployment (pump and save)
+'Const SeapHOxSampleCommand = "ts"  ' "ts" for testing on land (no pump and save)
+Const SeapHOxSampleCommand = "tpss"  ' "tpss" for deployment (pump and save)
 
 Const SeapHOxSamplePeriodMin = 2  'minute  5 min for deployment
 Const SUNASamplePeriodMin = 1     'minutes  15 minutes for deployment
 Const EcoSamplePeriodSec = 60     'seconds  60 sec for deployment
 Const ExoSamplePeriodSec = 75     'seconds  900 sec for deployment
-'Const TableFileInterval = 24
+'Const TableFileInterval = 24     'Update local table every 24 hr
 'Const TableFileUnits = "Hr"
-Const TableFileInterval = 1
-Const TableFileUnits = Hr
+'Const TableFileInterval = 1      'Update local table every 1 hr (testing)
+'Const TableFileUnits = Hr
+Const TableFileInterval = 2      'Update local table every 2 min (testing)
+Const TableFileUnits = Min
+'Const TableFileOption = 32     'JSON output that matches Campbell Web API: (CSIJSON, TimeStamp, Record#) 
+Const TableFileOption = 8       'Campbell TOA5 CSV format, including Header, TimeStamp, Record#
+'Const TableFileOption = 259    'AmeriFlux (CSV) output with Header:  See https://ameriflux.lbl.gov/data/aboutdata/data-variables/
+
 
 
 'Declare Public Variables
@@ -45,33 +55,59 @@ Public ECO_LastFileName As String * 32
 Public EXO(16)
 Public EXO_LastFileName As String * 32
 Public CR1X_LastFileName As String * 32
+Public PTemp_C, Temp_C, BattV
+
+'Define Aliases and units
+Units BattV=Volts
+Units PTemp_C=Deg C
+Units Temp_C=Deg C
+
+Units SPHOX_T=degC
+Units SPHOX_VpHext=Volts
+Units SPHOX_VpHint=Volts
+Units SPHOX_pHtemp=degC
+Units SPHOX_P=dbar
+Units SPHOX_S=psu
+Units SPHOX_C=S/m
+Units SPHOX_Oxy=ml/L
+Units SPHOX_RH=%
+Units SPHOX_Tint=degC
+
+Units SUNA_NO3=uM
+Units SUNA_Nitrogen=mgN/L
+Units SUNA_BrTrace=mg/L
+Units SUNA_SpecAvg=counts
+Units SUNA_Dark=counts
+Units SUNA_TempInt=degC
+Units SUNA_TempSpec=degC
+Units SUNA_TempLamp=degC
+Units SUNA_LampOnTime=sec
+Units SUNA_RH=%
+Units SUNA_Vmain=Volts
+Units SUNA_Vlamp=Volts
+Units SUNA_Vint=Volts
+Units SUNA_Imain=mA
 
 Units ECO_Chl470=counts
 Units ECO_Beta700=counts
 Units ECO_FDOM=counts
 
-Public PTemp_C, Temp_C, BattV
-Units BattV=Volts
-Units PTemp_C=Deg C
-Units Temp_C=Deg C
-
-'Define Aliases
 Alias EXO(1) = EXO_Date
 Alias EXO(2) = EXO_Time
-Alias EXO(3) = EXO_T
-Alias EXO(4) = EXO_CmScm
-Alias EXO(5) = EXO_S
+Alias EXO(3) = EXO_T     : Units EXO_T=degC
+Alias EXO(4) = EXO_CmScm : Units EXO_CmScm=mS/cm
+Alias EXO(5) = EXO_S     : Units EXO_S=ppt
 Alias EXO(6) = EXO_pH
-Alias EXO(7) = EXO_P
-Alias EXO(8) = EXO_z
-Alias EXO(9) = EXO_NTU
-Alias EXO(10) = EXO_ChlRFU
-Alias EXO(11) = EXO_Oxysat
-Alias EXO(12) = EXO_OxymgL
-Alias EXO(13) = EXO_PeRFU
-Alias EXO(14) = EXO_FNU
-Alias EXO(15) = EXO_BatV
-Alias EXO(16) = EXO_ExtV
+Alias EXO(7) = EXO_P     : Units EXO_P=psig
+Alias EXO(8) = EXO_z     : Units EXO_z=m
+Alias EXO(9) = EXO_NTU   : Units EXO_NTU=NTU
+Alias EXO(10) = EXO_ChlRFU : Units EXO_ChlRFU=RFU
+Alias EXO(11) = EXO_Oxysat : Units EXO_Oxysat=% 
+Alias EXO(12) = EXO_OxymgL : Units EXO_OxymgL=mg/L
+Alias EXO(13) = EXO_PeRFU  : Units EXO_PeRFU=RFU
+Alias EXO(14) = EXO_FNU    : Units EXO_FNU=FNU
+Alias EXO(15) = EXO_BatV   : Units EXO_BatV=Volts
+Alias EXO(16) = EXO_ExtV   : Units EXO_ExtV=Volts
 
 'Declare Private Variables
 'Example:
@@ -83,28 +119,28 @@ Alias EXO(16) = EXO_ExtV
 'format returned by HTTP Web Server API JSON format option.
 'A new file is opened every 24 hr, e.g.,CRD:SeapHOx_0.dat, CRD:SeapHOx_1.dat, ....
 DataTable (SeapHOx,1,-1) 'Set table size to # of records, or -1 to autoallocate. 
-    TableFile("CRD:SeapHOx_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, SPHOX_LastFileName)
+    TableFile("CRD:SeapHOx_", TableFileOption, -1, 0, TableFileInterval, TableFileUnits, 0, SPHOX_LastFileName)
     Sample (1,SPHOX_Header,String) 
     Sample (1,SPHOX_DateTime,String)
     Sample (1,SPHOX_SampleNum,Long) 
-    Sample (1,SPHOX_ErrorFlags,String
+    Sample (1,SPHOX_ErrorFlags,String)
     Sample (1,SPHOX_T,Float)
     Sample (1,SPHOX_pHext,Float) 
     Sample (1,SPHOX_pHint,Float) 
     Sample (1,SPHOX_VpHext,Float
     Sample (1,SPHOX_VpHint,Float) 
-    Sample (1,SPHOX_pHtemp,Float
+    Sample (1,SPHOX_pHtemp,Float)
     Sample (1,SPHOX_P,Float) 
     Sample (1,SPHOX_S,Float) 
     Sample (1,SPHOX_C,Float) 
-    Sample (1,SPHOX_Oxy,Float
+    Sample (1,SPHOX_Oxy,Float)
     Sample (1,SPHOX_RH,Float) 
-    Sample (1,SPHOX_Tint,Float
+    Sample (1,SPHOX_Tint,Float)
     Sample (1,SPHOX_RawString,String) 
 EndTable
 
 DataTable (SUNA,1,-1) 'Set table size to # of records, or -1 to autoallocate.
-   TableFile("CRD:SUNA_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, SUNA_LastFileName)
+   TableFile("CRD:SUNA_", TableFileOption, -1, 0, TableFileInterval, TableFileUnits, 0, SUNA_LastFileName)
    Sample (1,SUNA_Header,String)
    Sample (1,SUNA_Date,Long)   
    Sample (1,SUNA_Time,Float)
@@ -115,7 +151,7 @@ DataTable (SUNA,1,-1) 'Set table size to # of records, or -1 to autoallocate.
    Sample (1,SUNA_BrTrace,Float)
    Sample (1,SUNA_SpecAvg,Long)
    Sample (1,SUNA_Dark,Long)
-   Sample (1,SUNA_IntTime,Long)
+   Sample (1,SUNA_IntTimeFactor,Long)
    Sample (1,SUNA_TempInt,Float)
    Sample (1,SUNA_TempSpec,Float)
    Sample (1,SUNA_TempLamp,Float)
@@ -130,7 +166,7 @@ DataTable (SUNA,1,-1) 'Set table size to # of records, or -1 to autoallocate.
 EndTable
 
 DataTable (EcoTriplet,True,-1) 'Set table size to # of records, or -1 to autoallocate.
-   TableFile("CRD:EcoTriplet_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, ECO_LastFileName)
+   TableFile("CRD:EcoTriplet_", TableFileOption, -1, 0, TableFileInterval, TableFileUnits, 0, ECO_LastFileName)
    Sample (1,ECO_Header,String)
    Sample (1,ECO_Chl470,Long)
    Sample (1,ECO_Beta700,Long)   
@@ -141,7 +177,7 @@ EndTable
 DataTable (EXOData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
 ' date   time   temp   Cms/cm psal pH  psig depthm NTU chlr O2%sat O2mgL PEr FNU  BattV ExtV
 ' psig is coverted to pressure YSI_P in dbar during parsing.
-  TableFile("CRD:EXOData_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, EXO_LastFileName)
+  TableFile("CRD:EXOData_", TableFileOption, -1, 0, TableFileInterval, TableFileUnits, 0, EXO_LastFileName)
 	Sample(1,EXO(1),Float)
 	Sample(1,EXO(2),Float)
 	Sample(1,EXO(3),Float)
@@ -161,7 +197,7 @@ DataTable (EXOData,1,-1) 'Set table size to # of records, or -1 to autoallocate.
 EndTable	
 
 DataTable(CR1X,True,-1)
-  TableFile("CRD:CR1X_", 32, -1, 0, TableFileInterval, TableFileUnits, 0, CR1X_LastFileName)
+  TableFile("CRD:CR1X_", TableFileOption, -1, 0, TableFileInterval, TableFileUnits, 0, CR1X_LastFileName)
   DataInterval(0,30,Sec,0)
 	Sample(1,BattV,FP2)
 	Sample(1,PTemp_C,FP2)
@@ -233,7 +269,7 @@ Sub SUNAProcess(Rstring As String * 2500)
   Public SUNA_Date As Long, SUNA_Time As Float
   Public SUNA_NO3 As Float, SUNA_Nitrogen As Float
   Public SUNA_A254 As Float, SUNA_A350 As Float, SUNA_BrTrace As Float
-  Public SUNA_SpecAvg As Long, SUNA_Dark As Long, SUNA_IntTime As Long
+  Public SUNA_SpecAvg As Long, SUNA_Dark As Long, SUNA_IntTimeFactor As Long
   Public SUNA_TempInt As Float, SUNA_TempSpec As Float
   Public SUNA_TempLamp As Float, SUNA_LampOnTime As Long
   Public SUNA_RH As Float, SUNA_Vmain As Float, SUNA_Vlamp As Float, 
@@ -253,7 +289,7 @@ Sub SUNAProcess(Rstring As String * 2500)
   SUNA_BrTrace=SplitStrs(8)
   SUNA_SpecAvg=SplitStrs(9)
   SUNA_Dark=SplitStrs(10)
-  SUNA_IntTime=SplitStrs(11)
+  SUNA_IntTimeFactor=SplitStrs(11)
   'Skip spectra : SplitStrs(12:267) (Available in SUNA_RawString)
   SUNA_TempInt=SplitStrs(268)
   SUNA_TempSpec=SplitStrs(269)
