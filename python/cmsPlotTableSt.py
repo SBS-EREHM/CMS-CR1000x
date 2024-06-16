@@ -117,8 +117,8 @@ def main() :
             fig.update_layout(
                 title=table,
                 # autosize=True,lo
-                height=len(colsToPlot)*300,
-                width=1000  )
+                height=len(colsToPlot)*400
+                )
             
             fig.update_xaxes(rangeslider=dict(visible=False))
 
