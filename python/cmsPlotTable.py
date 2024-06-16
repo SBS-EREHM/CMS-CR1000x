@@ -134,11 +134,11 @@ def main() :
     )
     fig.update_xaxes(rangeslider=dict(visible=False))
 
-    # Rewrite annotation to add units
-    i = 0
-    for annotation in fig.layout.annotations:
-        annotation.text = value_vars[i] + ' (' + units[i] + ')'
-        i = i + 1
+    # Rewrite annotation to add units  (BROKEN)
+    # i = 0
+    # for annotation in fig.layout.annotations:
+    #     annotation.text = value_vars[i] + ' (' + units_vars[i] + ')'
+    #     i = i + 1
 
     if savePlot :
         print('Saving plot to: ' + str(plotPath))
