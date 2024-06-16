@@ -1,16 +1,17 @@
+import sys
 import argparse
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from pathlib import Path
 
-def processCommandLine(cmsBoxDirDefault) :
+def processCommandLine(cmsTables, cmsBoxDirDefault) :
     # Instantiate the parser
     parser = argparse.ArgumentParser(description='Plot CR1000X logger tables as time series')
 
     # Required positional argument
     parser.add_argument('table', type=str,
-                    help='A required integer positional argument', default='SeapHOx')
+                    help='One of : CR1X, SeapHOx, SUNA, EcoTriplet, or EXOData', default='SeapHOx')
 
     # Optional positional argument
     # parser.add_argument('opt_pos_arg', type=int, nargs='?',
@@ -22,32 +23,24 @@ def processCommandLine(cmsBoxDirDefault) :
     
     # Optional argument
     parser.add_argument('-fw', '--filterwidth', type=int,
-                    help='Median filter width (set to 1 to disable)', default=5)
+                    help='Median filter width (default = 5; set to 1 to disable)', default=5)
 
     # save plot Sswitch
     parser.add_argument('-save', '--saveplot', action='store_true',
-                    help='A boolean switch')
+                    help='Save plot to cmsBoxDir/html')
     args = parser.parse_args()
 
-    return args
+    table = args.table
+    if table in cmsTables:
+        return args
+    else:
+        tables = list(cmsTables.keys())
+        sys.exit('table must be one of : '+ str(tables))
 
 def main() :
 
+    # Define some defaults before processing command line args
     cmsBoxDirDefault = '/Users/ericrehm/Library/CloudStorage/Box-Box/CMS_shared/'
-
-    args = processCommandLine(cmsBoxDirDefault)
-    
-    print('Plotting table: ' + args.table)
-    # print(args.cmsboxdir)
-    # print(args.saveplot)
-
-    cmsBoxPath = Path(args.cmsboxdir)
-    cmsDataPath = cmsBoxPath / Path('data')
-    cmsPlotPath = cmsBoxPath / Path('html')
-
-    logger = 'CR1000XSeries'
-    table = args.table
-    savePlot = args.saveplot
 
     # Declare CMS tables and associated columns (time series) to plot.
     # Always skip column [1] : record
@@ -55,6 +48,7 @@ def main() :
     # For SeapHox  skip header [2], datetime [3], rawString [18]
     # For SUNA     skip header [2], date [3], time [4], rawString [22]
     # For YSI EXO  skip data [2], time [3]
+
     cmsTables = {
         'CR1X' : [2,3,4],
         'SeapHOx' : [4,5,6,7,8,9,10,11,12,13,14,15,16,17],
@@ -63,16 +57,35 @@ def main() :
         'EXOData' : [4,5,6,7,8,9,10,11,12,13,14,15,16,17]
     }
 
+    # Process command line
+    args = processCommandLine(cmsTables, cmsBoxDirDefault)
+    
+    # Go....
+    print('Plotting table: ' + args.table)
+    # print(args.cmsboxdir)
+    # print(args.saveplot)
+
+    # Where is the data?  Where do the plots go?
+    cmsBoxPath = Path(args.cmsboxdir)
+    cmsDataPath = cmsBoxPath / Path('data')
+    cmsPlotPath = cmsBoxPath / Path('html')
+
+    # What to do?
+    logger = 'CR1000XSeries'
+    table = args.table
+    savePlot = args.saveplot
+    filterWidth = args.filterwidth
+
     # table = 'SeapHOx'
     # table = 'SUNA'
     # table = 'EcoTriplet'
     # table="EXOData"
-    filterWidth = 5
 
     # Path to table file downloaded from logger
     tablePath = cmsDataPath / Path(logger+'_'+table+'.dat')
     plotPath = cmsPlotPath / Path(table+'.html')
 
+    # Which columns in table to plot? It depends on the table....
     colsToPlot = cmsTables[table]
     # print(colsToPlot)
 
