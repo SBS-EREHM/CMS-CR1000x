@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 from pathlib import Path
+import gsw 
 
 def processCommandLine(cmsTables, cmsBoxDirDefault) :
     # Instantiate the parser
@@ -54,7 +55,8 @@ def main() :
         'SeapHOx' : [4,5,6,7,8,9,10,11,12,13,14,15,16,17],
         'SUNA' : [5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21],
         'EcoTriplet' : [3,4,5],
-        'EXOData' : [4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+        # 'EXOData' : [4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+        'EXOData' : [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
     }
 
     # Process command line
@@ -107,6 +109,7 @@ def main() :
         print(vars[i])
         df[vars[i]] = df[vars[i]].apply(pd.to_numeric, errors='coerce').rolling(filterWidth).median()
 
+    # df['SPHOX_S'] = gsw.SP_from_C(df['SPHOX_C']*10,  df['SPHOX_T'],  df['SPHOX_P'])
     # print(vars)
     # print(units)
 
