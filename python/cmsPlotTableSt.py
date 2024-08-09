@@ -81,7 +81,7 @@ def main() :
             vars = df.columns.values.tolist()
             units = df.iloc[0].astype(str).values.tolist()
             df.drop(0, inplace=True)
-            df.reset_index(inplace=True)
+            df.reset_index(inplace=True, drop=True)
             # print(df.head(3))
 
             # Because the initial read_csv data had text in some columns, need to coerce data to numeric
