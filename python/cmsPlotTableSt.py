@@ -11,7 +11,7 @@ def main() :
     # Title and Logo
     st.title('Plot CR1000X Data Table')
     st.logo(
-        'ClimateMonitoringStationLogo.png',
+        image='./ClimateMonitoringStationLogo.png',
         link=None,
         icon_image=None
     )
