@@ -8,7 +8,22 @@ def main() :
 
     st.set_page_config(layout='wide') 
 
+    # Title and Logo
     st.title('Plot CR1000X Data Table')
+    st.logo(
+        'ClimateMonitoringStationLogo.png',
+        link=None,
+        icon_image=None
+    )
+
+    # HTML to make logo bigger
+    st.html("""
+        <style>
+            [alt=Logo] {
+            height: 5rem;
+            }
+        </style>
+                """)
 
     uploaded_file = st.file_uploader('Select a CR1000X table file', type=['dat'])
 
